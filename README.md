@@ -216,3 +216,4 @@ errors. No secrets or credentials are stored in the frontend.
 Product photography is loaded from Unsplash and the backend media directory; a branded fallback is
 shown if an image fails. Payments use the local sandbox provider — no real charge is made. Email
 delivery is written to the backend log unless SMTP is configured.
+# shopio
