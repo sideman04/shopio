@@ -1,0 +1,27 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Preserve the Authorization header for bearer-token clients.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Front controller.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# Fail closed: only the front controller and static assets in this directory may
+# ever be served. Everything else (app/, routes/, database/, storage/, .env,
+# composer.json, logs) lives above the document root and must not be reachable.
+<FilesMatch "^\.|\.(env|ini|log|sql|json|lock|md|yml|yaml|dist|phar)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "no-referrer"
+</IfModule>
+
+Options -Indexes -ExecCGI

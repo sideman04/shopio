@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment files (secrets)
+.env
+.env.local
+.env.*.local
+
+# Editor / OS noise
+.DS_Store
+*.log

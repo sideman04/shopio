@@ -1,0 +1,22 @@
+O:23:"PHPStan\Cache\CacheItem":2:{s:11:"variableKey";s:38:"v3-6.73.0.6-dev-master@e4f5f6c-8.4.24-";s:4:"data";a:17:{s:4:"name";s:26:"register_shutdown_function";s:10:"parameters";a:2:{s:8:"callback";a:13:{s:4:"name";s:8:"callback";s:7:"default";N;s:4:"type";a:2:{s:5:"class";s:55:"PHPStan\BetterReflection\Reflection\ReflectionNamedType";s:4:"data";a:2:{s:4:"name";s:8:"callable";s:12:"isIdentifier";b:1;}}s:10:"isVariadic";b:0;s:5:"byRef";b:0;s:10:"isPromoted";b:0;s:10:"attributes";a:0:{}s:9:"startLine";i:27;s:7:"endLine";i:27;s:11:"startColumn";i:41;s:9:"endColumn";i:58;s:14:"parameterIndex";i:0;s:10:"isOptional";b:0;}s:4:"args";a:13:{s:4:"name";s:4:"args";s:7:"default";N;s:4:"type";a:2:{s:5:"class";s:55:"PHPStan\BetterReflection\Reflection\ReflectionNamedType";s:4:"data";a:2:{s:4:"name";s:5:"mixed";s:12:"isIdentifier";b:1;}}s:10:"isVariadic";b:1;s:5:"byRef";b:0;s:10:"isPromoted";b:0;s:10:"attributes";a:0:{}s:9:"startLine";i:27;s:7:"endLine";i:27;s:11:"startColumn";i:61;s:9:"endColumn";i:74;s:14:"parameterIndex";i:1;s:10:"isOptional";b:1;}}s:16:"returnsReference";b:0;s:10:"returnType";a:2:{s:5:"class";s:55:"PHPStan\BetterReflection\Reflection\ReflectionNamedType";s:4:"data";a:2:{s:4:"name";s:4:"void";s:12:"isIdentifier";b:1;}}s:10:"attributes";a:1:{i:0;a:3:{s:4:"name";s:50:"JetBrains\PhpStorm\Internal\LanguageLevelTypeAware";s:10:"isRepeated";b:0;s:9:"arguments";a:2:{i:0;a:2:{s:4:"code";s:17:"['8.2' => 'void']";s:10:"attributes";a:6:{s:9:"startLine";i:26;s:7:"endLine";i:26;s:13:"startTokenPos";i:11;s:12:"startFilePos";i:953;s:11:"endTokenPos";i:17;s:10:"endFilePos";i:969;}}s:7:"default";a:2:{s:4:"code";s:11:"'null|bool'";s:10:"attributes";a:6:{s:9:"startLine";i:26;s:7:"endLine";i:26;s:13:"startTokenPos";i:23;s:12:"startFilePos";i:981;s:11:"endTokenPos";i:23;s:10:"endFilePos";i:991;}}}}}s:10:"docComment";s:787:"/**
+ * Register a function for execution on shutdown
+ * @link https://php.net/manual/en/function.register-shutdown-function.php
+ * @param callable $callback <p>
+ * The shutdown function to register.
+ * </p>
+ * <p>
+ * The shutdown functions are called as the part of the request so that
+ * it's possible to send the output from them. There is currently no way
+ * to process the data with output buffering functions in the shutdown
+ * function.
+ * </p>
+ * <p>
+ * Shutdown functions are called after closing all opened output buffers
+ * thus, for example, its output will not be compressed if zlib.output_compression is
+ * enabled.
+ * </p>
+ * @param mixed ...$args [optional] <p>
+ * It is possible to pass parameters to the shutdown function by passing
+ * additional parameters.
+ * </p>
+ */";s:9:"startLine";i:26;s:7:"endLine";i:29;s:11:"startColumn";i:5;s:9:"endColumn";i:5;s:10:"couldThrow";b:0;s:9:"isClosure";b:0;s:11:"isGenerator";b:0;s:10:"isVariadic";b:1;s:8:"isStatic";b:0;s:9:"namespace";N;s:13:"locatedSource";a:2:{s:5:"class";s:68:"PHPStan\BetterReflection\SourceLocator\Located\InternalLocatedSource";s:4:"data";a:4:{s:4:"name";s:26:"register_shutdown_function";s:8:"filename";s:39:"phpstorm-stubs:standard/standard_4.stub";s:13:"extensionName";s:8:"standard";s:9:"aliasName";N;}}}}

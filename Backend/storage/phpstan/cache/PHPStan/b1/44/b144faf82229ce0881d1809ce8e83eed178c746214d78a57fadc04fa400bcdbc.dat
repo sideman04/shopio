@@ -1,0 +1,49 @@
+O:23:"PHPStan\Cache\CacheItem":2:{s:11:"variableKey";s:38:"v3-6.73.0.6-dev-master@e4f5f6c-8.4.24-";s:4:"data";a:17:{s:4:"name";s:17:"set_error_handler";s:10:"parameters";a:2:{s:8:"callback";a:13:{s:4:"name";s:8:"callback";s:7:"default";N;s:4:"type";a:2:{s:5:"class";s:55:"PHPStan\BetterReflection\Reflection\ReflectionUnionType";s:4:"data";a:1:{s:5:"types";a:2:{i:0;a:2:{s:5:"class";s:55:"PHPStan\BetterReflection\Reflection\ReflectionNamedType";s:4:"data";a:2:{s:4:"name";s:8:"callable";s:12:"isIdentifier";b:1;}}i:1;a:2:{s:5:"class";s:55:"PHPStan\BetterReflection\Reflection\ReflectionNamedType";s:4:"data";a:2:{s:4:"name";s:4:"null";s:12:"isIdentifier";b:1;}}}}}s:10:"isVariadic";b:0;s:5:"byRef";b:0;s:10:"isPromoted";b:0;s:10:"attributes";a:0:{}s:9:"startLine";i:53;s:7:"endLine";i:53;s:11:"startColumn";i:32;s:9:"endColumn";i:50;s:14:"parameterIndex";i:0;s:10:"isOptional";b:0;}s:12:"error_levels";a:13:{s:4:"name";s:12:"error_levels";s:7:"default";a:2:{s:4:"code";s:6:"\E_ALL";s:10:"attributes";a:6:{s:9:"startLine";i:53;s:7:"endLine";i:53;s:13:"startTokenPos";i:24;s:12:"startFilePos";i:2619;s:11:"endTokenPos";i:24;s:10:"endFilePos";i:2623;}}s:4:"type";a:2:{s:5:"class";s:55:"PHPStan\BetterReflection\Reflection\ReflectionNamedType";s:4:"data";a:2:{s:4:"name";s:3:"int";s:12:"isIdentifier";b:1;}}s:10:"isVariadic";b:0;s:5:"byRef";b:0;s:10:"isPromoted";b:0;s:10:"attributes";a:0:{}s:9:"startLine";i:53;s:7:"endLine";i:53;s:11:"startColumn";i:53;s:9:"endColumn";i:77;s:14:"parameterIndex";i:1;s:10:"isOptional";b:1;}}s:16:"returnsReference";b:0;s:10:"returnType";N;s:10:"attributes";a:0:{}s:10:"docComment";s:2331:"/**
+ * Sets a user-defined error handler function
+ * @link https://php.net/manual/en/function.set-error-handler.php
+ * @param callable|null $callback <p>
+ * The user function needs to accept two parameters: the error code, and a
+ * string describing the error. Then there are three optional parameters
+ * that may be supplied: the filename in which the error occurred, the
+ * line number in which the error occurred, and the context in which the
+ * error occurred (an array that points to the active symbol table at the
+ * point the error occurred). The function can be shown as:
+ * </p>
+ * <p>
+ * <b>handler</b>
+ * <b>int<i>errno</i></b>
+ * <b>string<i>errstr</i></b>
+ * <b>string<i>errfile</i></b>
+ * <b>int<i>errline</i></b>
+ * <b>array<i>errcontext</i></b>
+ * <i>errno</i>
+ * The first parameter, <i>errno</i>, contains the
+ * level of the error raised, as an integer.</p>
+ * The user function should stop execution if necessary by calling `exit()`.
+ * If the function returns a value other than false, script execution will
+ * continue with the next statement after the one that caused an error.
+ * If the function returns false, the standard PHP error handler is called.
+ * @param int $error_levels [optional] <p>
+ * Can be used to mask the triggering of the
+ * <i>error_handler</i> function just like the error_reporting ini setting
+ * controls which errors are shown. Without this mask set the
+ * <i>error_handler</i> will be called for every error
+ * regardless to the setting of the error_reporting setting.
+ * </p>
+ * @return callable|null a string containing the previously defined error handler (if any). If
+ * the built-in error handler is used null is returned. null is also returned
+ * in case of an error such as an invalid callback. If the previous error handler
+ * was a class method, this function will return an indexed array with the class
+ * and the method name.
+ *
+ * Note that error_handler chaining is possible by passing the output value as a reference:
+ * ```
+ * $previousErrorHandler = set_error_handler(
+ *     static function (int $errNo, string $errstr, string $errFile, int $errLine) use (&$previousErrorHandler): bool {
+ *         // Handle specific scenarios
+ *
+ *         return $previousErrorHandler !== null ? (bool) $previousErrorHandler(...func_get_args()) : false;
+ *     }
+ * );
+ * ```
+ */";s:9:"startLine";i:53;s:7:"endLine";i:55;s:11:"startColumn";i:5;s:9:"endColumn";i:5;s:10:"couldThrow";b:0;s:9:"isClosure";b:0;s:11:"isGenerator";b:0;s:10:"isVariadic";b:0;s:8:"isStatic";b:0;s:9:"namespace";N;s:13:"locatedSource";a:2:{s:5:"class";s:68:"PHPStan\BetterReflection\SourceLocator\Located\InternalLocatedSource";s:4:"data";a:4:{s:4:"name";s:17:"set_error_handler";s:8:"filename";s:29:"phpstorm-stubs:Core/Core.stub";s:13:"extensionName";s:4:"Core";s:9:"aliasName";N;}}}}

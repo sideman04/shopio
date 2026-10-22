@@ -1,0 +1,763 @@
+{
+  "info": {
+    "_postman_id": "d7c1a3b0-5f2e-4b8a-9c1d-shopio000001",
+    "name": "Shopio API",
+    "description": "Shopio marketplace REST API (v1).\n\n## Setup\n1. Set the `baseUrl` variable (default http://localhost:8000/api/v1).\n2. Run **Auth > Register** or **Auth > Login**; a test script stores `token` automatically.\n3. Bearer auth is applied collection-wide; public endpoints ignore it.\n\n## CSRF\nOnly needed if you switch to cookie sessions. In bearer mode (the default here) CSRF is not required.\n\n## Idempotency\nA collection-level pre-request script sets a fresh `idempotencyKey` (GUID) on every request; the money endpoints send it as `Idempotency-Key`. To test replay, freeze the key (uncheck the pre-request script) and send the same body twice.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Fresh idempotency key per request (freeze to test replay).",
+          "pm.variables.set('idempotencyKey', pm.variables.replaceIn('{{$guid}}'));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000/api/v1" },
+    { "key": "token", "value": "" },
+    { "key": "csrfToken", "value": "" },
+    { "key": "idempotencyKey", "value": "" },
+    { "key": "productSlug", "value": "test-product" },
+    { "key": "variantId", "value": "1" },
+    { "key": "orderId", "value": "1" },
+    { "key": "refundId", "value": "1" },
+    { "key": "payoutId", "value": "1" },
+    { "key": "userId", "value": "1" },
+    { "key": "sellerId", "value": "1" },
+    { "key": "cronToken", "value": "change-me" },
+    { "key": "mockSecret", "value": "dev-mock-webhook-secret-change-me" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Liveness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (customer)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Amina Hassan\",\n  \"email\": \"amina+{{$timestamp}}@example.test\",\n  \"password\": \"Correct-Horse-9!\",\n  \"password_confirmation\": \"Correct-Horse-9!\",\n  \"accept_terms\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.token) { pm.collectionVariables.set('token', json.data.token); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register (seller)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Mavuno Supplies\",\n  \"email\": \"seller+{{$timestamp}}@example.test\",\n  \"password\": \"Correct-Horse-9!\",\n  \"password_confirmation\": \"Correct-Horse-9!\",\n  \"accept_terms\": 1,\n  \"store_name\": \"Mavuno Supplies\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"amina@example.test\",\n  \"password\": \"Correct-Horse-9!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.token) { pm.collectionVariables.set('token', json.data.token); }",
+                  "if (json && json.data && json.data.csrfToken) { pm.collectionVariables.set('csrfToken', json.data.csrfToken); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] }
+          }
+        },
+        {
+          "name": "Forgot password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"amina@example.test\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["auth", "forgot-password"] }
+          }
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"amina@example.test\",\n  \"token\": \"<reset-token-from-email>\",\n  \"password\": \"New-Correct-9!\",\n  \"password_confirmation\": \"New-Correct-9!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["auth", "reset-password"] }
+          }
+        },
+        {
+          "name": "Verify email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<verification-token>\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/verify-email", "host": ["{{baseUrl}}"], "path": ["auth", "verify-email"] }
+          }
+        },
+        {
+          "name": "Change password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"Correct-Horse-9!\",\n  \"password\": \"Even-Better-9!\",\n  \"password_confirmation\": \"Even-Better-9!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/change-password", "host": ["{{baseUrl}}"], "path": ["auth", "change-password"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalogue",
+      "item": [
+        {
+          "name": "List products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products?page=1&per_page=20&q=&category=",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                { "key": "q", "value": "" },
+                { "key": "category", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Product detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/products/{{productSlug}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productSlug}}"] }
+          }
+        },
+        {
+          "name": "Product reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/products/{{productSlug}}/reviews", "host": ["{{baseUrl}}"], "path": ["products", "{{productSlug}}", "reviews"] }
+          }
+        },
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] }
+          }
+        },
+        {
+          "name": "Storefront",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/stores/{{productSlug}}", "host": ["{{baseUrl}}"], "path": ["stores", "{{productSlug}}"] }
+          }
+        },
+        {
+          "name": "Banners",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/banners", "host": ["{{baseUrl}}"], "path": ["banners"] }
+          }
+        },
+        {
+          "name": "Countries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/countries", "host": ["{{baseUrl}}"], "path": ["countries"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Show cart",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/cart", "host": ["{{baseUrl}}"], "path": ["cart"] }
+          }
+        },
+        {
+          "name": "Add item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"variant_id\": {{variantId}},\n  \"quantity\": 1\n}" },
+            "url": { "raw": "{{baseUrl}}/cart/items", "host": ["{{baseUrl}}"], "path": ["cart", "items"] }
+          }
+        },
+        {
+          "name": "Update item",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"quantity\": 2\n}" },
+            "url": { "raw": "{{baseUrl}}/cart/items/1", "host": ["{{baseUrl}}"], "path": ["cart", "items", "1"] }
+          }
+        },
+        {
+          "name": "Remove item",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/cart/items/1", "host": ["{{baseUrl}}"], "path": ["cart", "items", "1"] }
+          }
+        },
+        {
+          "name": "Clear cart",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/cart", "host": ["{{baseUrl}}"], "path": ["cart"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders & Payments",
+      "item": [
+        {
+          "name": "Checkout (create order)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"Amina Hassan\",\n  \"customer_email\": \"amina@example.test\",\n  \"customer_phone\": \"+255700000000\",\n  \"shipping_address_line\": \"123 Test Street\",\n  \"shipping_city\": \"Dar es Salaam\",\n  \"shipping_region\": \"Dar es Salaam\",\n  \"shipping_country_code\": \"TZ\",\n  \"customer_note\": \"Please call on arrival\",\n  \"coupon_code\": null\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.order && json.data.order.id) { pm.collectionVariables.set('orderId', json.data.order.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List my orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders?page=1&per_page=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Order detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}"] }
+          }
+        },
+        {
+          "name": "Cancel order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Changed my mind\"\n}" },
+            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}/cancel", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}", "cancel"] }
+          }
+        },
+        {
+          "name": "Start payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"provider\": \"mock\"\n}" },
+            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}/payments", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}", "payments"] }
+          }
+        },
+        {
+          "name": "List refunds for order",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}/refunds", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}", "refunds"] }
+          }
+        },
+        {
+          "name": "Request refund",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": \"50.00\",\n  \"reason\": \"Item arrived damaged\"\n}" },
+            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}/refunds", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}", "refunds"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer",
+      "item": [
+        {
+          "name": "Get profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/customers/profile", "host": ["{{baseUrl}}"], "path": ["customers", "profile"] }
+          }
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"full_name\": \"Amina H.\",\n  \"phone\": \"+255700000001\"\n}" },
+            "url": { "raw": "{{baseUrl}}/customers/profile", "host": ["{{baseUrl}}"], "path": ["customers", "profile"] }
+          }
+        },
+        {
+          "name": "List addresses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/customers/addresses", "host": ["{{baseUrl}}"], "path": ["customers", "addresses"] }
+          }
+        },
+        {
+          "name": "Create address",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"recipient_name\": \"Amina Hassan\",\n  \"phone\": \"+255700000000\",\n  \"city_id\": 1,\n  \"street_address\": \"123 Test Street\",\n  \"is_default\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/customers/addresses", "host": ["{{baseUrl}}"], "path": ["customers", "addresses"] }
+          }
+        },
+        {
+          "name": "Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/customers/notifications", "host": ["{{baseUrl}}"], "path": ["customers", "notifications"] }
+          }
+        },
+        {
+          "name": "Wishlist",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/customers/wishlist", "host": ["{{baseUrl}}"], "path": ["customers", "wishlist"] }
+          }
+        },
+        {
+          "name": "Validate coupon",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"TENOFF\",\n  \"subtotal\": \"200.00\"\n}" },
+            "url": { "raw": "{{baseUrl}}/coupons/validate", "host": ["{{baseUrl}}"], "path": ["coupons", "validate"] }
+          }
+        },
+        {
+          "name": "Submit support message",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Amina Hassan\",\n  \"email\": \"amina@example.test\",\n  \"subject\": \"Delivery question\",\n  \"message\": \"When will my order arrive?\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/support", "host": ["{{baseUrl}}"], "path": ["support"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uploads",
+      "item": [
+        {
+          "name": "Upload image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/uploads/images", "host": ["{{baseUrl}}"], "path": ["uploads", "images"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seller",
+      "item": [
+        {
+          "name": "Register store",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"store_name\": \"Mavuno Supplies\"\n}" },
+            "url": { "raw": "{{baseUrl}}/sellers/register", "host": ["{{baseUrl}}"], "path": ["sellers", "register"] }
+          }
+        },
+        {
+          "name": "Store profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/sellers/store", "host": ["{{baseUrl}}"], "path": ["sellers", "store"] }
+          }
+        },
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/sellers/dashboard", "host": ["{{baseUrl}}"], "path": ["sellers", "dashboard"] }
+          }
+        },
+        {
+          "name": "Create product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Handwoven Basket\",\n  \"category_id\": 1,\n  \"short_description\": \"Woven by hand\",\n  \"description\": \"A durable handwoven basket.\",\n  \"condition_type\": \"new\",\n  \"currency\": \"TZS\",\n  \"status\": \"draft\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sellers/products", "host": ["{{baseUrl}}"], "path": ["sellers", "products"] }
+          }
+        },
+        {
+          "name": "List products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/sellers/products", "host": ["{{baseUrl}}"], "path": ["sellers", "products"] }
+          }
+        },
+        {
+          "name": "Create variant",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"BASKET-001\",\n  \"variant_name\": \"Default\",\n  \"price\": \"25000.00\",\n  \"is_default\": true,\n  \"is_active\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sellers/products/1/variants", "host": ["{{baseUrl}}"], "path": ["sellers", "products", "1", "variants"] }
+          }
+        },
+        {
+          "name": "Adjust inventory",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"variant_id\": {{variantId}},\n  \"quantity\": 25,\n  \"reason\": \"restock\"\n}" },
+            "url": { "raw": "{{baseUrl}}/sellers/inventory/adjust", "host": ["{{baseUrl}}"], "path": ["sellers", "inventory", "adjust"] }
+          }
+        },
+        {
+          "name": "Seller orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/sellers/orders", "host": ["{{baseUrl}}"], "path": ["sellers", "orders"] }
+          }
+        },
+        {
+          "name": "Fulfil item",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"shipped\",\n  \"carrier\": \"DHL\",\n  \"tracking_number\": \"TRACK-123\"\n}" },
+            "url": { "raw": "{{baseUrl}}/sellers/orders/{{orderId}}/items/1", "host": ["{{baseUrl}}"], "path": ["sellers", "orders", "{{orderId}}", "items", "1"] }
+          }
+        },
+        {
+          "name": "Payout summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/sellers/payouts/summary", "host": ["{{baseUrl}}"], "path": ["sellers", "payouts", "summary"] }
+          }
+        },
+        {
+          "name": "Request payout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payout_method\": \"bank_transfer\",\n  \"destination_label\": \"CRDB ****1234\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sellers/payouts", "host": ["{{baseUrl}}"], "path": ["sellers", "payouts"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Overview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/admin/overview", "host": ["{{baseUrl}}"], "path": ["admin", "overview"] }
+          }
+        },
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/admin/users", "host": ["{{baseUrl}}"], "path": ["admin", "users"] }
+          }
+        },
+        {
+          "name": "Update user status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"suspended\",\n  \"reason\": \"Policy violation\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/users/{{userId}}/status", "host": ["{{baseUrl}}"], "path": ["admin", "users", "{{userId}}", "status"] }
+          }
+        },
+        {
+          "name": "Verify seller",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"verification_status\": \"approved\",\n  \"commission_rate\": \"10.00\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/sellers/{{sellerId}}", "host": ["{{baseUrl}}"], "path": ["admin", "sellers", "{{sellerId}}"] }
+          }
+        },
+        {
+          "name": "Moderate product",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/products/1", "host": ["{{baseUrl}}"], "path": ["admin", "products", "1"] }
+          }
+        },
+        {
+          "name": "Update order status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"shipped\",\n  \"note\": \"Handed to courier\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/orders/{{orderId}}/status", "host": ["{{baseUrl}}"], "path": ["admin", "orders", "{{orderId}}", "status"] }
+          }
+        },
+        {
+          "name": "Create promotion",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"TENOFF\",\n  \"discount_type\": \"percentage\",\n  \"discount_value\": \"10.00\",\n  \"status\": \"active\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/promotions", "host": ["{{baseUrl}}"], "path": ["admin", "promotions"] }
+          }
+        },
+        {
+          "name": "List refunds",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/admin/refunds", "host": ["{{baseUrl}}"], "path": ["admin", "refunds"] }
+          }
+        },
+        {
+          "name": "Decide refund",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"succeeded\",\n  \"note\": \"Approved\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/refunds/{{refundId}}", "host": ["{{baseUrl}}"], "path": ["admin", "refunds", "{{refundId}}"] }
+          }
+        },
+        {
+          "name": "List payouts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/admin/payouts", "host": ["{{baseUrl}}"], "path": ["admin", "payouts"] }
+          }
+        },
+        {
+          "name": "Decide payout",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"paid\",\n  \"provider_reference\": \"DISB-0001\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/payouts/{{payoutId}}", "host": ["{{baseUrl}}"], "path": ["admin", "payouts", "{{payoutId}}"] }
+          }
+        },
+        {
+          "name": "Activity log",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/admin/activity", "host": ["{{baseUrl}}"], "path": ["admin", "activity"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks & Maintenance",
+      "item": [
+        {
+          "name": "Mock payment.succeeded (signed)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Shopio-Timestamp", "value": "{{mockWebhookTs}}" },
+              { "key": "X-Shopio-Signature", "value": "{{mockWebhookSig}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{{mockWebhookBody}}" },
+            "url": { "raw": "{{baseUrl}}/webhooks/payments/mock", "host": ["{{baseUrl}}"], "path": ["webhooks", "payments", "mock"] }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Build and sign a mock payment.succeeded webhook.",
+                  "const secret = pm.collectionVariables.get('mockSecret');",
+                  "const ts = String(Math.floor(Date.now() / 1000));",
+                  "const body = JSON.stringify({",
+                  "  id: 'evt_' + Date.now(),",
+                  "  type: 'payment.succeeded',",
+                  "  data: { provider_reference: pm.collectionVariables.get('mockProviderReference') || 'mock_reference_here' }",
+                  "});",
+                  "const sig = CryptoJS.HmacSHA256(ts + '.' + body, secret).toString(CryptoJS.enc.Hex);",
+                  "pm.variables.set('mockWebhookTs', ts);",
+                  "pm.variables.set('mockWebhookBody', body);",
+                  "pm.variables.set('mockWebhookSig', sig);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Run maintenance",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-Cron-Token", "value": "{{cronToken}}" }],
+            "url": { "raw": "{{baseUrl}}/internal/maintenance", "host": ["{{baseUrl}}"], "path": ["internal", "maintenance"] }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+# Dependencies
+/vendor/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# Uploads (private, never web-served)
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+
+# Test / coverage artifacts
+/.phpunit.cache/
+/coverage/
+/build/
+*.cache
+.phpunit.result.cache
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store

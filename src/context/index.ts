@@ -1,0 +1,11 @@
+/** Barrel for the client state layer (Zustand stores + helpers). */
+export * from './authStore'
+export * from './cartStore'
+export * from './wishlistStore'
+export * from './uiStore'
+export * from './catalogStore'
+export * from './orderStore'
+export * from './peopleStore'
+export * from './systemStore'
+export * from './accountStore'
+export * from './installStore'

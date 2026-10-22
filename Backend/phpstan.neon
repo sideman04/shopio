@@ -1,0 +1,10 @@
+parameters:
+    level: 5
+    paths:
+        - app
+        - routes
+        - public
+    excludePaths:
+        - vendor
+    tmpDir: storage/phpstan
+    treatPhpDocTypesAsCertain: false

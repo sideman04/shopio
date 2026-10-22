@@ -1,0 +1,1 @@
+O:23:"PHPStan\Cache\CacheItem":2:{s:11:"variableKey";s:73:"v2-0a4de7f0025e46460f7e78157133e8fe68848a37e8d96f1c86367c92ce50a079-8.5.1";s:4:"data";a:3:{s:7:"classes";a:1:{s:37:"dotenv\exception\invalidfileexception";b:1;}s:9:"functions";a:0:{}s:9:"constants";a:0:{}}}

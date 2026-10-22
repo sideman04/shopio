@@ -1,0 +1,97 @@
+@import "tailwindcss";
+@config "../tailwind.config.js"; /* Adjust path if your config is located elsewhere */
+
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white font-sans text-ink antialiased;
+    /* Guard against horizontal overflow on small screens. */
+    overflow-x: hidden;
+  }
+
+  /* Consistent, accessible focus ring across the app. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ink/70 ring-offset-2 ring-offset-white;
+  }
+
+  ::selection {
+    @apply bg-ink text-white;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-ink;
+    text-wrap: balance;
+  }
+
+  /* Respect users who prefer reduced motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-container px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-y {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+
+  /* Hide scrollbars for horizontal scrollers while keeping keyboard scroll. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Table wrapper so dashboard tables scroll instead of overflowing. */
+  .table-scroll {
+    @apply w-full overflow-x-auto;
+  }
+
+  .link-underline {
+    @apply underline decoration-ink/30 underline-offset-4 transition hover:decoration-ink;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .skeleton {
+    @apply relative overflow-hidden bg-ink-100;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent;
+    animation: shimmer 1.4s infinite;
+  }
+}
+
+/* Recharts focus outlines add noise on click; keep only keyboard focus. */
+.recharts-wrapper:focus:not(:focus-visible),
+.recharts-surface:focus:not(:focus-visible) {
+  outline: none;
+}
