@@ -37,7 +37,7 @@ export function TR({
   ...props
 }: React.HTMLAttributes<HTMLTableRowElement> & { 'data-state'?: string }) {
   return (
-    <tr className={cn('transition-colors hover:bg-ink-50/60', className)} {...props}>
+    <tr className={cn('transition-colors hover:bg-ink-50/60 focus-within:bg-ink-50/80', className)} {...props}>
       {children}
     </tr>
   )

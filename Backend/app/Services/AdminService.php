@@ -413,18 +413,42 @@ final class AdminService
             throw new NotFoundException('The requested product does not exist.');
         }
 
-        $status = (string) $data['status'];
-
-        if ($status === 'active') {
-            $this->products->markApproved($productId, $auth->id);
-        } else {
-            $this->products->setStatus($productId, $status, $data['rejection_reason'] ?? null);
+        $productChanges = array_intersect_key($data, array_flip(['name', 'brand', 'category_id']));
+        if (array_key_exists('category_id', $productChanges) && $productChanges['category_id'] !== null
+            && !$this->categories->exists((int) $productChanges['category_id'])) {
+            throw new ValidationException(['category_id' => ['The selected category does not exist.']]);
         }
 
-        $this->audit->record($auth, 'admin.product_moderated', 'product', $productId, $request, ['status' => $status]);
+        $status = isset($data['status']) ? (string) $data['status'] : null;
+        $this->db->transaction(function () use ($productId, $productChanges, $data, $status, $auth): void {
+            if ($productChanges !== []) {
+                $this->products->update($productId, $productChanges);
+            }
+
+            if (array_key_exists('price', $data)) {
+                $variants = $this->products->variants($productId, true);
+                if ($variants === []) {
+                    throw new ConflictException('Add an active variant before setting a product price.');
+                }
+                $this->products->updateVariant((int) $variants[0]['id'], ['price' => $data['price']]);
+            }
+
+            if ($status !== null) {
+                if ($status === 'active') {
+                    $this->products->markApproved($productId, $auth->id);
+                } else {
+                    $this->products->setStatus($productId, $status, $data['rejection_reason'] ?? null);
+                }
+            }
+        });
+
+        $this->audit->record($auth, 'admin.product_moderated', 'product', $productId, $request, [
+            'status' => $status,
+            'updated_fields' => array_values(array_intersect(array_keys($data), ['name', 'brand', 'category_id', 'price'])),
+        ]);
 
         $seller = $this->sellers->findById((int) $product['seller_id']);
-        if ($seller !== null && isset($seller['user_id'])) {
+        if ($status !== null && $seller !== null && isset($seller['user_id'])) {
             $this->notifications->notify(
                 (int) $seller['user_id'],
                 'product',
@@ -434,7 +458,7 @@ final class AdminService
             );
         }
 
-        return ['id' => $productId, 'status' => $status];
+        return ['id' => $productId, 'status' => $status ?? (string) $product['status']];
     }
 
     /**

@@ -186,8 +186,8 @@ export default function SellerRegisterPage() {
               <h1 className="text-xl font-bold tracking-tight">Application received</h1>
               <p className="mt-2 text-sm leading-relaxed text-ink-600">
                 Thanks, {values.fullName || 'there'}. We have your application for{' '}
-                <span className="font-medium text-ink">{values.storeName || 'your store'}</span>. Our team reviews
-                most applications within two business days.
+                <span className="font-medium text-ink">{values.storeName || 'your store'}</span>. Our team will
+                review the details and contact you if anything else is needed.
               </p>
             </div>
             <Alert tone="info" title="What happens next">
@@ -515,12 +515,10 @@ export default function SellerRegisterPage() {
                 Commission, explained
               </h2>
               <p className="text-sm leading-relaxed text-ink-600">
-                Shopio takes a commission of <span className="font-medium text-ink">8–12%</span> on each completed
-                sale. It is deducted automatically when an order settles, so there is nothing to invoice.
+                Commission details for your store are confirmed during approval and shown in your seller dashboard.
               </p>
               <p className="text-sm leading-relaxed text-ink-600">
-                Listing is free and there is no monthly fee. Your exact rate is confirmed when your store is
-                approved and shown on every payout statement.
+                Review the current fee and payout information before you publish products.
               </p>
             </CardBody>
           </Card>

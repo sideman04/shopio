@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
-  Check,
   ChevronRight,
   Heart,
   Package,
   RefreshCcw,
-  ShieldCheck,
   ShoppingCart,
   Store,
   Truck,
@@ -256,7 +254,11 @@ export default function ProductDetailPage() {
           <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{product.name}</h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-4">
-            <Stars rating={product.rating} showValue reviewCount={product.reviewCount} />
+            {product.reviewCount > 0 && product.rating > 0 ? (
+              <Stars rating={product.rating} showValue reviewCount={product.reviewCount} />
+            ) : (
+              <span className="text-sm text-ink-500">No reviews yet</span>
+            )}
             <span className="text-sm text-ink-500">
               {product.soldCount > 0 ? `${product.soldCount} sold` : 'New listing'}
             </span>
@@ -275,7 +277,9 @@ export default function ProductDetailPage() {
               </>
             )}
           </div>
-          <p className="mt-1 text-xs text-ink-500">Inclusive of VAT · Free delivery above TSh 1,000,000</p>
+          <p className="mt-1 text-xs text-ink-500">
+            <Link to="/shipping-returns" className="link-underline">View delivery and returns information</Link>
+          </p>
 
           {!hydrating && product.variants.length === 0 && (
             <Alert tone="warning" className="mt-4" title="Limited offline view">
@@ -313,22 +317,14 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Trust micro-list */}
-          <ul className="mt-6 grid gap-3 text-sm text-ink-600 sm:grid-cols-2">
+          <ul className="mt-5 grid gap-3 text-sm text-ink-600 sm:grid-cols-2">
             <li className="flex items-center gap-2.5">
               <Truck className="h-4 w-4 text-ink-400" aria-hidden="true" />
-              Delivered in 2–5 working days
+              Delivery details at checkout
             </li>
             <li className="flex items-center gap-2.5">
               <RefreshCcw className="h-4 w-4 text-ink-400" aria-hidden="true" />
-              7-day returns on eligible items
-            </li>
-            <li className="flex items-center gap-2.5">
-              <ShieldCheck className="h-4 w-4 text-ink-400" aria-hidden="true" />
-              Buyer protection on every order
-            </li>
-            <li className="flex items-center gap-2.5">
-              <Check className="h-4 w-4 text-ink-400" aria-hidden="true" />
-              SKU {selected?.sku}
+              <Link to="/shipping-returns" className="link-underline">Returns policy</Link>
             </li>
           </ul>
 
@@ -340,8 +336,11 @@ export default function ProductDetailPage() {
                 <p className="text-xs uppercase tracking-wide text-ink-400">Sold by</p>
                 <p className="truncate text-sm font-semibold text-ink">{seller.storeName}</p>
                 <div className="mt-1 flex items-center gap-2">
-                  <Stars rating={seller.rating ?? 0} size="sm" showValue />
-                  <span className="text-xs text-ink-500">· {seller.reviewCount ?? 0} reviews</span>
+                  {seller.reviewCount && seller.reviewCount > 0 && seller.rating && seller.rating > 0 ? (
+                    <Stars rating={seller.rating} size="sm" showValue reviewCount={seller.reviewCount} />
+                  ) : (
+                    <span className="text-xs text-ink-500">No reviews yet</span>
+                  )}
                 </div>
               </div>
               <Button variant="outline" size="sm" to={`/search?q=${encodeURIComponent(seller.storeName)}`}>

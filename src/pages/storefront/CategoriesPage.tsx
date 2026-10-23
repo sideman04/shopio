@@ -19,17 +19,16 @@ export default function CategoriesPage() {
   return (
     <div>
       <div className="border-b border-ink-200 bg-sand-50">
-        <div className="container-page py-8 sm:py-10">
+        <div className="container-page py-6 sm:py-8">
           <Breadcrumbs items={[{ label: 'Categories' }]} />
           <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">Shop by category</h1>
           <p className="mt-2 max-w-2xl text-sm text-ink-600">
-            {formatNumber(total)} active products across {categories.length} curated categories — every
-            seller on Shopio is verified before their store goes live.
+            Browse {formatNumber(total)} active products across {categories.length} categories.
           </p>
         </div>
       </div>
 
-      <div className="container-page py-10">
+      <div className="container-page py-8 sm:py-10">
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => {
             const count = counts[category.slug] ?? 0

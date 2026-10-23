@@ -36,6 +36,7 @@ import {
 } from '@/components/ui'
 import { DataToolbar } from '@/components/tables/DataToolbar'
 import { adminService } from '@/services'
+import * as authService from '@/services/authService'
 import { errorMessage } from '@/services/apiClient'
 import { usePeopleStore } from '@/context/peopleStore'
 import { toast } from '@/context/uiStore'
@@ -150,6 +151,8 @@ export default function AdminUsersPage() {
       toast.success(title, `${ids.length} account${ids.length === 1 ? '' : 's'} updated.`)
       setSelected([])
       setConfirm(null)
+    } catch (error) {
+      toast.error('Account status not updated', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -372,26 +375,30 @@ export default function AdminUsersPage() {
                           {
                             label: 'Reset password',
                             icon: <KeyRound className="h-4 w-4" />,
-                            onClick: () =>
-                              toast.info(
-                                'Password reset',
-                                `${user.fullName} can reset their password from the sign-in screen.`,
-                              ),
+                            onClick: async () => {
+                              try {
+                                await authService.requestPasswordReset(user.email)
+                                toast.success('Reset email requested', `A password reset link was requested for ${user.email}.`)
+                              } catch (error) {
+                                toast.error('Could not request password reset', errorMessage(error))
+                              }
+                            },
                           },
                           {
-                            label: 'Send email reminder',
+                            label: 'Contact by email',
                             icon: <Send className="h-4 w-4" />,
-                            onClick: () =>
-                              toast.info(
-                                'Email reminder',
-                                `${user.fullName} receives transactional email for their account activity.`,
-                              ),
+                            onClick: () => {
+                              window.location.href = `mailto:${encodeURIComponent(user.email)}?subject=${encodeURIComponent('Shopio account')}`
+                            },
                           },
-                          { label: 'Activate', icon: <Check className="h-4 w-4" />, divider: true, onClick: () => applyStatus([user.id], 'active', 'Account activated') },
+                          ...(user.status !== 'active'
+                            ? [{ label: 'Activate', icon: <Check className="h-4 w-4" />, divider: true, onClick: () => applyStatus([user.id], 'active', 'Account activated') }]
+                            : []),
                           {
                             label: 'Suspend',
                             icon: <Ban className="h-4 w-4" />,
                             tone: 'danger',
+                            disabled: user.status === 'suspended',
                             onClick: () =>
                               setConfirm({
                                 ids: [user.id],
@@ -404,6 +411,7 @@ export default function AdminUsersPage() {
                             label: 'Disable',
                             icon: <Ban className="h-4 w-4" />,
                             tone: 'danger',
+                            disabled: user.status === 'disabled',
                             onClick: () =>
                               setConfirm({
                                 ids: [user.id],

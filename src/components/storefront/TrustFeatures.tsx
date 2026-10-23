@@ -1,37 +1,32 @@
-import { BadgeCheck, Headphones, RefreshCcw, Truck } from 'lucide-react'
+import { Heart, PackageCheck, Store } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const FEATURES = [
   {
-    icon: Truck,
-    title: 'Free Shipping',
-    description: 'Free countrywide delivery on orders above TSh 1,000,000.',
+    icon: Store,
+    title: 'Independent sellers',
+    description: 'Explore products from multiple stores in one marketplace.',
   },
   {
-    icon: BadgeCheck,
-    title: 'Money Guarantee',
-    description: 'Full refund within 7 days if an item is not as described.',
+    icon: Heart,
+    title: 'Save favourites',
+    description: 'Keep products you like together in your wishlist.',
   },
   {
-    icon: Headphones,
-    title: 'Online Support',
-    description: 'Real people on chat and phone, seven days a week.',
-  },
-  {
-    icon: RefreshCcw,
-    title: 'Secure Payment',
-    description: 'Mobile money, cards and bank transfer — encrypted end to end.',
+    icon: PackageCheck,
+    title: 'Order updates',
+    description: 'Check the status of your purchases in your account.',
   },
 ]
 
 /**
- * Storefront trust strip. Four compact icon features laid out horizontally on
- * desktop and stacked on mobile, matching the reference layout.
+ * Storefront feature strip. Three compact features laid out horizontally on
+ * desktop and stacked on mobile.
  */
 export function TrustFeatures({ className }: { className?: string }) {
   return (
-    <section className={cn('container-page', className)} aria-label="Why shop with Shopio">
-      <ul className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+    <section className={cn('container-page', className)} aria-label="Marketplace features">
+      <ul className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map((feature) => (
           <li key={feature.title} className="flex items-start gap-3.5">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-ink-50 text-ink">

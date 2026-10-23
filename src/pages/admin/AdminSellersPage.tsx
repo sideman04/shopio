@@ -150,16 +150,23 @@ export default function AdminSellersPage() {
     }
   }
 
-  const saveCommission = () => {
+  const saveCommission = async () => {
     if (!commissionSeller) return
     const value = Number(commissionValue)
     if (!Number.isFinite(value) || value < 0 || value > 40) {
       toast.error('Enter a valid commission', 'Commission must be between 0% and 40%.')
       return
     }
-    usePeopleStore.getState().updateSeller(commissionSeller.id, { commissionRate: value })
-    toast.success('Commission updated', `${commissionSeller.storeName} now pays ${value}% per sale.`)
-    setCommissionSeller(null)
+    setBusy(true)
+    try {
+      await adminService.setSellerCommission(commissionSeller.id, value)
+      toast.success('Commission updated', `${commissionSeller.storeName} now pays ${value}% per sale.`)
+      setCommissionSeller(null)
+    } catch (error) {
+      toast.error('Commission not updated', error instanceof Error ? error.message : 'Please try again.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const runBulk = async () => {
@@ -456,10 +463,10 @@ export default function AdminSellersPage() {
         size="sm"
         footer={
           <>
-            <Button variant="outline" onClick={() => setCommissionSeller(null)}>
+            <Button variant="outline" onClick={() => setCommissionSeller(null)} disabled={busy}>
               Cancel
             </Button>
-            <Button onClick={saveCommission}>Save commission</Button>
+            <Button onClick={saveCommission} loading={busy}>Save commission</Button>
           </>
         }
       >

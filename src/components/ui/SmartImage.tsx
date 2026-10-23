@@ -8,6 +8,8 @@ interface SmartImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>
   wrapperClassName?: string
   /** Ratio used for the generated placeholder when the image fails. */
   fallbackLabel?: string
+  /** Optional branded background shown while a remote image is loading. */
+  loadingClassName?: string
 }
 
 /**
@@ -17,7 +19,7 @@ interface SmartImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>
  * otherwise leave a broken-image icon. On error we render a neutral, branded
  * placeholder derived from the alt text instead.
  */
-export function SmartImage({ src, alt, className, wrapperClassName, fallbackLabel, ...props }: SmartImageProps) {
+export function SmartImage({ src, alt, className, wrapperClassName, fallbackLabel, loadingClassName, ...props }: SmartImageProps) {
   const [failed, setFailed] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
@@ -66,7 +68,7 @@ export function SmartImage({ src, alt, className, wrapperClassName, fallbackLabe
 
   return (
     <div className={cn('relative overflow-hidden bg-ink-100', wrapperClassName)}>
-      {!loaded && <span className="skeleton absolute inset-0" aria-hidden="true" />}
+      {!loaded && <span className={cn('skeleton absolute inset-0', loadingClassName)} aria-hidden="true" />}
       {image}
     </div>
   )

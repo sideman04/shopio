@@ -43,7 +43,7 @@ export function ProductGrid({
   return (
     <div
       className={cn(
-        'grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6',
+        'motion-stagger grid grid-cols-2 gap-x-4 gap-y-7 sm:gap-x-6 sm:gap-y-8',
         columns === 4 ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-3',
         className,
       )}

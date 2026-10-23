@@ -19,18 +19,18 @@ import { cn } from '@/lib/utils'
 const BENEFITS = [
   {
     icon: Store,
-    title: 'Reach thousands of shoppers',
-    body: 'Your products appear alongside established Tanzanian stores in search, category and home feeds — no separate website to build or maintain.',
+    title: 'Reach shoppers on Shopio',
+    body: 'List products in the marketplace and let shoppers find them through search, categories and product collections.',
   },
   {
     icon: BadgeCheck,
-    title: 'Low, transparent commission',
-    body: 'We take 8–12% per completed sale depending on category. No listing fees, no monthly subscription, no charge on orders that never ship.',
+    title: 'Clear seller fees',
+    body: 'Review the commission and payout details for your store in the seller tools and payout records.',
   },
   {
     icon: Wallet,
-    title: 'Weekly payouts',
-    body: 'Earnings clear after the buyer’s return window closes and are paid out to your bank account or mobile money wallet on a weekly cycle.',
+    title: 'Payout tracking',
+    body: 'Review your balance and payout history from the seller dashboard.',
   },
   {
     icon: Truck,
@@ -44,8 +44,8 @@ const BENEFITS = [
   },
   {
     icon: ShieldCheck,
-    title: 'Seller protection',
-    body: 'Order and payout records are logged, disputes are reviewed by our team, and payout holds are always explained before they are applied.',
+    title: 'Store controls',
+    body: 'Update your store profile and manage your product listings from one place.',
   },
 ]
 
@@ -54,7 +54,7 @@ const STEPS = [
     icon: Store,
     step: 'Step 1',
     title: 'Create your store',
-    body: 'Tell us about your business, set your store name and upload your verification documents. Most applications are reviewed within two business days.',
+    body: 'Tell us about your business, set your store name and provide the requested business details.',
   },
   {
     icon: PackagePlus,
@@ -119,22 +119,20 @@ export default function SellLandingPage() {
     <>
       {/* Hero */}
       <section className="border-b border-ink-200 bg-sand-50">
-        <div className="container-page grid items-center gap-10 py-14 sm:py-20 lg:grid-cols-2 lg:gap-16">
+        <div className="container-page grid items-center gap-8 py-8 sm:py-10 lg:grid-cols-2 lg:gap-12">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3 py-1 text-xs font-medium text-ink-600">
               <BadgeCheck className="h-3.5 w-3.5 text-gold-500" aria-hidden="true" />
               Selling on Shopio
             </span>
             <h1 className="mt-5 text-3xl font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
-              Sell to thousands of shoppers across Tanzania
+              Open a seller store on Shopio
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-600">
-              Open a store in minutes, list your products and reach customers in Dar es Salaam, Arusha, Mwanza
-              and beyond. You keep control of pricing, stock and fulfilment — we handle discovery, checkout and
-              payouts.
+              Publish your products and use seller tools to manage inventory, orders, reviews and payouts.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-5 flex flex-wrap items-center gap-3">
               <Button to="/seller/register" size="lg">
                 Start selling
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -145,29 +143,15 @@ export default function SellLandingPage() {
               </Button>
             </div>
 
-            <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-ink-200 pt-6">
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-ink-500">Listing fee</dt>
-                <dd className="mt-1 text-lg font-bold text-ink">Free</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-ink-500">Commission</dt>
-                <dd className="mt-1 text-lg font-bold text-ink">8–12%</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-ink-500">Payouts</dt>
-                <dd className="mt-1 text-lg font-bold text-ink">Weekly</dd>
-              </div>
-            </dl>
           </div>
 
           {/* Dashboard capabilities */}
           <div className="relative">
-            <Card className="p-6">
+            <Card className="p-5 sm:p-6">
               <p className="text-sm font-semibold text-ink">Everything in one dashboard</p>
               <ul className="mt-4 space-y-3 text-sm text-ink-600">
                 {[
-                  'Track orders and fulfilment in real time.',
+                  'Review orders and fulfilment details.',
                   'See revenue, payouts and commission at a glance.',
                   'Manage stock and low-stock alerts.',
                   'Reply to customer reviews.',
@@ -253,14 +237,14 @@ export default function SellLandingPage() {
           <div>
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Fees you can plan around</h2>
             <p className="mt-3 text-ink-600">
-              There are no hidden charges. Here is exactly what Shopio takes and what you keep on a typical order.
+              Your store’s current commission and payout details are shown in the seller dashboard and payout records.
             </p>
             <ul className="mt-6 space-y-3 text-sm text-ink-600">
               {[
-                'No listing fee and no monthly subscription.',
-                'Commission is deducted automatically at settlement.',
-                'You are only charged on completed, paid orders.',
-                'Payouts go to a bank account or mobile money wallet in the store’s name.',
+                'Review your store’s fee details before publishing products.',
+                'See order and payout records in the seller dashboard.',
+                'Manage your fulfilment and stock from the same account.',
+                'Update your payout destination from seller settings.',
               ].map((point) => (
                 <li key={point} className="flex items-start gap-2.5">
                   <Check className="mt-0.5 h-4 w-4 shrink-0 text-success-600" aria-hidden="true" />
@@ -271,25 +255,14 @@ export default function SellLandingPage() {
           </div>
 
           <Card className="p-6">
-            <h3 className="text-base font-semibold text-ink">Worked example — a TSh 1,000,000 order</h3>
-            <dl className="mt-4 divide-y divide-ink-100 text-sm">
-              <div className="flex items-center justify-between py-3">
-                <dt className="text-ink-600">Item subtotal</dt>
-                <dd className="font-medium text-ink">TSh 1,000,000</dd>
-              </div>
-              <div className="flex items-center justify-between py-3">
-                <dt className="text-ink-600">Shopio commission (10%)</dt>
-                <dd className="font-medium text-danger-700">− TSh 100,000</dd>
-              </div>
-              <div className="flex items-center justify-between py-3">
-                <dt className="font-medium text-ink">You receive</dt>
-                <dd className="text-lg font-bold text-ink">TSh 900,000</dd>
-              </div>
-            </dl>
-            <p className="mt-4 text-xs leading-relaxed text-ink-500">
-              Commission rates range from 8% to 12% depending on category and are confirmed when your store is
-              approved. The exact rate is always shown on your payout statements.
+            <h3 className="text-base font-semibold text-ink">Seller dashboard</h3>
+            <p className="mt-3 text-sm leading-relaxed text-ink-600">
+              Check sales activity, review order details, keep stock current, and follow payouts from your seller account.
             </p>
+            <Button to="/seller/register" className="mt-5">
+              Create seller account
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
           </Card>
         </div>
       </section>
@@ -309,13 +282,12 @@ export default function SellLandingPage() {
 
       {/* Final CTA */}
       <section className="bg-sand-100">
-        <div className="container-page py-14 sm:py-20">
+        <div className="container-page py-10 sm:py-12">
           <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
             <div className="max-w-xl">
               <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Ready to open your store?</h2>
               <p className="mt-3 text-ink-700">
-                Apply today and start listing. It takes about ten minutes, and you can save your progress and come
-                back later.
+                Apply to open your store and start adding products. You can save your progress and return later.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">

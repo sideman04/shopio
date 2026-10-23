@@ -12,6 +12,7 @@ import { Logo } from '@/components/navigation/Logo'
 import { homeRouteForRole, useActiveRole, useAuthStore } from '@/context/authStore'
 import { useUnreadCount, useNotificationsFor } from '@/context/systemStore'
 import { toast } from '@/context/uiStore'
+import { PageTransition } from './PageTransition'
 
 export interface NavItem {
   label: string
@@ -86,7 +87,7 @@ export function DashboardShell({ roleLabel, navGroups, notificationUserId, child
                   end={item.end}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                      'dashboard-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                       isActive
                         ? 'bg-ink text-white'
                         : 'text-ink-600 hover:bg-ink-100 hover:text-ink',
@@ -218,8 +219,8 @@ export function DashboardShell({ roleLabel, navGroups, notificationUserId, child
           </div>
         </header>
 
-        <main id="dashboard-main" className="px-4 py-6 sm:px-6 lg:py-8">
-          {children ?? <Outlet />}
+        <main id="dashboard-main" className="px-4 py-5 sm:px-6 lg:py-7">
+          <PageTransition>{children ?? <Outlet />}</PageTransition>
         </main>
       </div>
 

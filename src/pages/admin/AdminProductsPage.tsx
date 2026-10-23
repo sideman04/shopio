@@ -6,7 +6,6 @@ import {
   MoreHorizontal,
   Package,
   Pencil,
-  Trash2,
   X,
 } from 'lucide-react'
 import {
@@ -106,7 +105,7 @@ export default function AdminProductsPage() {
   const [editDraft, setEditDraft] = useState<EditDraft | null>(null)
 
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
-  const [bulk, setBulk] = useState<{ ids: number[]; action: 'approve' | 'archive' | 'delete' } | null>(null)
+  const [bulk, setBulk] = useState<{ ids: number[]; action: 'approve' | 'archive' } | null>(null)
 
   useEffect(() => {
     setPage(1)
@@ -297,12 +296,9 @@ export default function AdminProductsPage() {
       if (bulk.action === 'approve') {
         await Promise.all(bulk.ids.map((id) => adminService.moderateProduct(id, 'active')))
         toast.success('Products approved', `${bulk.ids.length} listing${bulk.ids.length === 1 ? '' : 's'} published.`)
-      } else if (bulk.action === 'archive') {
-        await Promise.all(bulk.ids.map((id) => adminService.moderateProduct(id, 'archived')))
-        toast.success('Products archived', `${bulk.ids.length} listing${bulk.ids.length === 1 ? '' : 's'} archived.`)
       } else {
         await Promise.all(bulk.ids.map((id) => adminService.moderateProduct(id, 'archived')))
-        toast.success('Products archived', `${bulk.ids.length} listing${bulk.ids.length === 1 ? '' : 's'} removed from the active catalogue.`)
+        toast.success('Products archived', `${bulk.ids.length} listing${bulk.ids.length === 1 ? '' : 's'} archived.`)
       }
       setBulk(null)
       setSelected([])
@@ -410,8 +406,8 @@ export default function AdminProductsPage() {
               <Button size="sm" variant="outline" onClick={() => setBulk({ ids: selected, action: 'archive' })}>
                 Archive
               </Button>
-              <Button size="sm" variant="danger" onClick={() => setBulk({ ids: selected, action: 'delete' })}>
-                Delete
+              <Button size="sm" variant="danger" onClick={() => setBulk({ ids: selected, action: 'archive' })}>
+                Archive
               </Button>
             </div>
           </div>
@@ -511,7 +507,7 @@ export default function AdminProductsPage() {
                             { label: 'Edit', icon: <Pencil className="h-4 w-4" />, onClick: () => openEdit(product) },
                             { label: 'Set active', icon: <Check className="h-4 w-4" />, divider: true, onClick: () => setActive(product) },
                             { label: 'Archive', icon: <Archive className="h-4 w-4" />, onClick: () => archive(product) },
-                            { label: 'Delete', icon: <Trash2 className="h-4 w-4" />, tone: 'danger', onClick: () => setDeleteTarget(product) },
+                            { label: 'Archive', icon: <Archive className="h-4 w-4" />, tone: 'danger', onClick: () => setDeleteTarget(product) },
                           ]}
                         />
                       </TD>
@@ -710,10 +706,11 @@ export default function AdminProductsPage() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => deleteTarget && remove(deleteTarget)}
-        title={deleteTarget ? `Delete ${deleteTarget.name}?` : ''}
-        description="This permanently removes the listing. It cannot be undone."
-        confirmLabel="Delete"
+        title={deleteTarget ? `Archive ${deleteTarget.name}?` : ''}
+        description="This removes the listing from the active catalogue. The product record and order history are retained."
+        confirmLabel="Archive"
         tone="danger"
+        loading={busy}
       />
 
       <ConfirmDialog
@@ -723,13 +720,11 @@ export default function AdminProductsPage() {
         title={
           bulk?.action === 'approve'
             ? 'Approve selected products?'
-            : bulk?.action === 'archive'
-              ? 'Archive selected products?'
-              : 'Delete selected products?'
+            : 'Archive selected products?'
         }
-        description={`This affects ${bulk?.ids.length ?? 0} listing(s).`}
-        confirmLabel={bulk?.action === 'delete' ? 'Delete' : bulk?.action === 'archive' ? 'Archive' : 'Approve'}
-        tone={bulk?.action === 'delete' ? 'danger' : 'default'}
+        description={`This affects ${bulk?.ids.length ?? 0} listing(s). Archived listings are removed from the active catalogue, but their records are retained.`}
+        confirmLabel={bulk?.action === 'approve' ? 'Approve' : 'Archive'}
+        tone={bulk?.action === 'archive' ? 'danger' : 'default'}
         loading={busy}
       />
     </div>

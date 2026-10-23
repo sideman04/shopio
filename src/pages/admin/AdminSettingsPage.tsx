@@ -92,6 +92,15 @@ const KEYS = {
   maintenanceMode: 'maintenance_mode',
 } as const
 
+const SECTION_KEYS: Record<keyof SettingsState, string[]> = {
+  general: [KEYS.siteName, KEYS.supportEmail, KEYS.supportPhone, KEYS.currency, KEYS.timezone, KEYS.country],
+  commerce: [KEYS.commissionRate, KEYS.minimumPayout, KEYS.autoApproveProducts, KEYS.autoApproveSellers, KEYS.reviewModeration],
+  shipping: [KEYS.freeShippingThreshold, KEYS.flatShippingFee, KEYS.vatRate, KEYS.taxInclusive, KEYS.carrier],
+  emails: [KEYS.orderConfirmation, KEYS.shippingNotification, KEYS.deliveryConfirmation, KEYS.welcomeEmail, KEYS.abandonedCart, KEYS.fromName, KEYS.replyTo],
+  payments: [KEYS.methods, KEYS.payoutSchedule],
+  maintenance: [KEYS.maintenanceMode],
+}
+
 const DEFAULTS: SettingsState = {
   general: {
     siteName: 'Shopio',
@@ -224,18 +233,58 @@ export default function AdminSettingsPage() {
   const update = <K extends keyof SettingsState>(section: K, patch: Partial<SettingsState[K]>) =>
     setSettings((current) => ({ ...current, [section]: { ...current[section], ...patch } }))
 
-  const save = async (label: string) => {
-    if (label === 'Payments' && settings.payments.methods.length === 0) {
+  const save = async (label: string, section?: keyof SettingsState) => {
+    if ((!section || section === 'payments') && settings.payments.methods.length === 0) {
       toast.error('Enable at least one payment method', 'Checkout needs at least one method to offer.')
       return
     }
+    if ((!section || section === 'general') && !/^\S+@\S+\.\S+$/.test(settings.general.supportEmail.trim())) {
+      toast.error('Enter a valid support email', 'Use a valid email address before saving general settings.')
+      return
+    }
+    if ((!section || section === 'emails') && !/^\S+@\S+\.\S+$/.test(settings.emails.replyTo.trim())) {
+      toast.error('Enter a valid reply-to address', 'Use a valid email address before saving email settings.')
+      return
+    }
+    if (!section || section === 'commerce') {
+      const commission = Number(settings.commerce.commissionRate)
+      const payout = Number(settings.commerce.minimumPayout)
+      if (!Number.isFinite(commission) || commission < 0 || commission > 40 || !Number.isFinite(payout) || payout < 0) {
+        toast.error('Check commerce values', 'Commission must be 0–40% and minimum payout cannot be negative.')
+        return
+      }
+    }
+    if (!section || section === 'shipping') {
+      const vat = Number(settings.shipping.vatRate)
+      if (![settings.shipping.freeShippingThreshold, settings.shipping.flatShippingFee].every((value) => Number.isFinite(Number(value)) && Number(value) >= 0) || !Number.isFinite(vat) || vat < 0 || vat > 100) {
+        toast.error('Check shipping and tax values', 'Amounts must be non-negative and VAT must be between 0 and 100%.')
+        return
+      }
+    }
     setSaving(true)
     try {
-      const flat = await adminService.updateSettings(flatten(settings))
-      setSettings(hydrate(flat))
+      const allValues = flatten(settings)
+      const values = section
+        ? Object.fromEntries(Object.entries(allValues).filter(([key]) => SECTION_KEYS[section].includes(key)))
+        : allValues
+      const flat = await adminService.updateSettings(values)
+      const savedSettings = hydrate(flat)
+      if (!section) setSettings(savedSettings)
       toast.success(`${label} settings saved`, 'The configuration was stored on the server.')
     } catch (error) {
       toast.error('Settings not saved', error instanceof Error ? error.message : 'Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const reloadSettings = async () => {
+    setSaving(true)
+    try {
+      setSettings(hydrate(await adminService.fetchSettings()))
+      toast.success('Settings reloaded', 'The latest saved configuration is now shown.')
+    } catch (error) {
+      toast.error('Could not reload settings', error instanceof Error ? error.message : 'Please try again.')
     } finally {
       setSaving(false)
     }
@@ -304,7 +353,7 @@ export default function AdminSettingsPage() {
           />
         </div>
         <div className="flex justify-end">
-          <Button onClick={() => save('General')}>
+          <Button onClick={() => save('General', 'general')} loading={saving}>
             <Save className="h-4 w-4" />
             Save general
           </Button>
@@ -362,7 +411,7 @@ export default function AdminSettingsPage() {
           />
         </div>
         <div className="flex justify-end">
-          <Button onClick={() => save('Commerce')}>
+          <Button onClick={() => save('Commerce', 'commerce')} loading={saving}>
             <Save className="h-4 w-4" />
             Save commerce
           </Button>
@@ -418,7 +467,7 @@ export default function AdminSettingsPage() {
           />
         </div>
         <div className="flex justify-end">
-          <Button onClick={() => save('Shipping and tax')}>
+          <Button onClick={() => save('Shipping and tax', 'shipping')} loading={saving}>
             <Truck className="h-4 w-4" />
             Save shipping
           </Button>
@@ -458,7 +507,7 @@ export default function AdminSettingsPage() {
           />
         </div>
         <div className="flex justify-end">
-          <Button onClick={() => save('Emails')}>
+          <Button onClick={() => save('Emails', 'emails')} loading={saving}>
             <Mail className="h-4 w-4" />
             Save emails
           </Button>
@@ -505,7 +554,7 @@ export default function AdminSettingsPage() {
           ]}
         />
         <div className="flex justify-end">
-          <Button onClick={() => save('Payments')}>
+          <Button onClick={() => save('Payments', 'payments')} loading={saving}>
             <CreditCard className="h-4 w-4" />
             Save payments
           </Button>
@@ -527,7 +576,7 @@ export default function AdminSettingsPage() {
           description="Flag the storefront as read-only. Enforcing it is a deployment concern; the setting is recorded so operational tooling can act on it."
         />
         <div className="flex justify-end border-t border-ink-100 pt-4">
-          <Button onClick={() => save('Maintenance')} loading={saving}>
+          <Button onClick={() => save('Maintenance', 'maintenance')} loading={saving}>
             <Save className="h-4 w-4" />
             Save maintenance
           </Button>
@@ -542,10 +591,13 @@ export default function AdminSettingsPage() {
         title="Platform settings"
         description="Marketplace-wide configuration for commerce, shipping, email and payments."
         actions={
-          <Button onClick={() => save('Platform')} loading={saving}>
-            <Save className="h-4 w-4" />
-            Save changes
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={reloadSettings} loading={saving}>Reload saved</Button>
+            <Button onClick={() => save('Platform')} loading={saving}>
+              <Save className="h-4 w-4" />
+              Save changes
+            </Button>
+          </div>
         }
       />
 

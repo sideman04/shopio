@@ -57,10 +57,20 @@ final class AdminValidator
      */
     public static function productModeration(array $data): array
     {
-        return Validator::check($data, [
-            'status' => 'required|in:draft,pending_review,active,rejected,archived',
+        $validated = Validator::check($data, [
+            'status' => 'sometimes|in:draft,pending_review,active,rejected,archived',
             'rejection_reason' => 'nullable|safe_text|string|max:2000',
+            'name' => 'sometimes|required|safe_text|string|min:3|max:200',
+            'brand' => 'sometimes|nullable|safe_text|string|max:120',
+            'category_id' => 'sometimes|nullable|integer|min:1',
+            'price' => 'sometimes|decimal|min:0.01|max:99999999999',
         ]);
+
+        if (array_intersect(array_keys($validated), ['status', 'name', 'brand', 'category_id', 'price']) === []) {
+            throw new ValidationException(['product' => ['Provide a status or product field to update.']]);
+        }
+
+        return $validated;
     }
 
     /**

@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { Header } from '@/components/navigation/Header'
 import { Footer } from '@/components/navigation/Footer'
 import { Toaster } from '@/components/ui/Toaster'
+import { PageTransition } from './PageTransition'
 
 /**
  * Public storefront shell: announcement bar, header, page content and footer.
@@ -36,7 +37,9 @@ export function StorefrontLayout() {
       <Header />
 
       <main id="main" className="flex-1">
-        <Outlet />
+        <PageTransition>
+          <Outlet />
+        </PageTransition>
       </main>
 
       <Footer />

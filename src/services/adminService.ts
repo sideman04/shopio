@@ -247,10 +247,35 @@ export async function moderateProduct(productId: number, status: ProductStatus, 
 }
 
 export async function adminUpdateProduct(id: number, values: Partial<ProductFormValues>) {
-  if (values.status) {
-    return moderateProduct(id, values.status)
+  const payload = {
+    name: values.name,
+    brand: values.brand,
+    category_id: values.categoryId,
+    price: values.price,
   }
-  return undefined
+  if (values.status !== undefined) Object.assign(payload, { status: values.status })
+  const response = await api.patch<Record<string, unknown>>(`/admin/products/${id}`, payload)
+  const store = useCatalogStore.getState()
+  const current = store.products.find((product) => product.id === id)
+  if (!current) return response.data
+
+  const category = values.categoryId == null
+    ? undefined
+    : store.categories.find((item) => item.id === values.categoryId)
+  store.upsertProduct({
+    ...current,
+    name: values.name ?? current.name,
+    brand: values.brand ?? current.brand,
+    categoryId: values.categoryId ?? current.categoryId,
+    categoryName: category?.name ?? current.categoryName,
+    categorySlug: category?.slug ?? current.categorySlug,
+    status: values.status ?? current.status,
+    updatedAt: new Date().toISOString(),
+    variants: values.price == null || current.variants.length === 0
+      ? current.variants
+      : current.variants.map((variant, index) => index === 0 ? { ...variant, price: values.price! } : variant),
+  })
+  return response.data
 }
 
 /* ------------------------------- Categories ------------------------------- */

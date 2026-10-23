@@ -59,7 +59,7 @@ export function Footer() {
           <div>
             <Logo />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-500">
-              Shopio is a multi-vendor marketplace connecting Tanzanian shoppers with verified local
+              Shopio is a multi-vendor marketplace connecting Tanzanian shoppers with independent local
               sellers of furniture, electronics, fashion, decor and accessories.
             </p>
 

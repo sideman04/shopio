@@ -56,7 +56,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref,
 ) {
   const classes = cn(
-    'inline-flex items-center justify-center rounded-lg font-medium transition-colors',
+    'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 ease-out',
+    'hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0 active:shadow-none',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/70 focus-visible:ring-offset-2',
     'disabled:cursor-not-allowed disabled:opacity-60',
     VARIANTS[variant],

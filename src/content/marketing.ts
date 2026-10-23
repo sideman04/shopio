@@ -57,7 +57,7 @@ export const sellerFaqs = [
   {
     question: 'What does it cost to sell on Shopio?',
     answer:
-      'Creating a store is free. Shopio takes a commission on each completed sale — typically 8–12% depending on category — which is deducted automatically at settlement.',
+      'Your store’s current commission and payout details are provided during approval and shown in your seller account.',
   },
   {
     question: 'How and when do I get paid?',
@@ -77,6 +77,6 @@ export const sellerFaqs = [
   {
     question: 'How do I get verified?',
     answer:
-      'Submit your store application. Our team reviews most applications within two business days and contacts you if any documents are needed.',
+      'Submit your store application and the requested business details. Shopio will contact you if more information is needed.',
   },
 ]

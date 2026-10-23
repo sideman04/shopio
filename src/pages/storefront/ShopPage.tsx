@@ -139,7 +139,7 @@ export default function ShopPage() {
     <div>
       {/* Header band */}
       <div className="border-b border-ink-200 bg-sand-50">
-        <div className="container-page py-8 sm:py-10">
+        <div className="container-page py-6 sm:py-8">
           <Breadcrumbs items={[{ label: 'Shop' }]} />
           <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
             <div>

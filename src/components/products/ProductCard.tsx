@@ -87,7 +87,9 @@ export function ProductCard({ product, className, layout = 'grid', showSeller = 
               {product.name}
             </Link>
           </h3>
-          <Stars rating={product.rating} reviewCount={product.reviewCount} size="sm" className="mt-1.5" />
+          {product.reviewCount > 0 && product.rating > 0 && (
+            <Stars rating={product.rating} reviewCount={product.reviewCount} size="sm" className="mt-1.5" />
+          )}
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-base font-semibold text-ink">{formatCurrency(minPrice)}</span>
             {discount > 0 && compareAt && (
@@ -121,13 +123,13 @@ export function ProductCard({ product, className, layout = 'grid', showSeller = 
 
   /* ------------------------------ Grid / compact ---------------------------- */
   return (
-    <article className={cn('group flex flex-col', className)}>
-      <div className="relative overflow-hidden rounded-card bg-ink-100">
+    <article className={cn('product-card group flex flex-col', className)}>
+      <div className="relative overflow-hidden rounded-lg bg-sand-50">
         <Link to={href} aria-label={product.name} className="block">
           <SmartImage
             src={primary?.imageUrl ?? product.primaryImage ?? undefined}
             alt={product.name}
-            wrapperClassName={cn(layout === 'compact' ? 'aspect-square' : 'aspect-[4/5]')}
+            wrapperClassName="aspect-square"
             className="transition-transform duration-500 group-hover:scale-[1.04]"
           />
           {/* Secondary shot fades in on hover for a premium catalog feel. */}
@@ -138,7 +140,7 @@ export function ProductCard({ product, className, layout = 'grid', showSeller = 
               aria-hidden="true"
               wrapperClassName={cn(
                 'absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100',
-                layout === 'compact' ? 'aspect-square' : 'aspect-[4/5]',
+                'aspect-square',
               )}
             />
           )}
@@ -169,13 +171,15 @@ export function ProductCard({ product, className, layout = 'grid', showSeller = 
         {showSeller && product.sellerName && (
           <p className="text-[11px] uppercase tracking-wide text-ink-400">{product.sellerName}</p>
         )}
-        <h3 className={cn('font-medium text-ink', layout === 'compact' ? 'line-clamp-2 text-sm' : 'line-clamp-2 text-sm sm:text-[15px]')}>
+        <h3 className={cn('min-h-10 font-medium text-ink', layout === 'compact' ? 'line-clamp-2 text-sm' : 'line-clamp-2 text-sm sm:text-[15px]')}>
           <Link to={href} className="transition-colors hover:text-ink-600">
             {product.name}
           </Link>
         </h3>
 
-        <Stars rating={product.rating} reviewCount={product.reviewCount} size="sm" className="mt-1.5" />
+        {product.reviewCount > 0 && product.rating > 0 && (
+          <Stars rating={product.rating} reviewCount={product.reviewCount} size="sm" className="mt-1.5" />
+        )}
 
         <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <span className="text-base font-semibold text-ink">

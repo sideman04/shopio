@@ -2,6 +2,7 @@ import { Link, Outlet } from 'react-router-dom'
 import { ArrowLeft, ShieldCheck } from 'lucide-react'
 import { Logo } from '@/components/navigation/Logo'
 import { Toaster } from '@/components/ui/Toaster'
+import { PageTransition } from './PageTransition'
 
 /**
  * Shell for the authentication pages. A calm, centred card on a warm neutral
@@ -23,9 +24,11 @@ export function AuthLayout() {
         </div>
       </header>
 
-      <main className="flex flex-1 items-center justify-center px-4 py-10 sm:py-14">
+      <main className="flex flex-1 items-center justify-center px-4 py-8 sm:py-10">
         <div className="w-full max-w-md">
-          <Outlet />
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
         </div>
       </main>
 

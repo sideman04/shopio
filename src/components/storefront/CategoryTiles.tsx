@@ -17,7 +17,7 @@ export function CategoryTiles({ categories, className }: CategoryTilesProps) {
   return (
     <ul
       className={cn(
-        'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 lg:gap-5',
+        'motion-stagger grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5 lg:gap-5',
         className,
       )}
     >
@@ -25,13 +25,13 @@ export function CategoryTiles({ categories, className }: CategoryTilesProps) {
         <li key={category.id}>
           <Link
             to={`/categories/${category.slug}`}
-            className="group block rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/70 focus-visible:ring-offset-2"
+            className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/70 focus-visible:ring-offset-2"
           >
             <div className="relative overflow-hidden rounded-card bg-ink-100">
               <SmartImage
                 src={category.imageUrl ?? undefined}
                 alt={category.name}
-                wrapperClassName="aspect-[4/5]"
+                wrapperClassName="aspect-[5/4] bg-sand-50 sm:aspect-square"
                 fallbackLabel={category.name}
                 className="transition-transform duration-500 group-hover:scale-105"
               />
