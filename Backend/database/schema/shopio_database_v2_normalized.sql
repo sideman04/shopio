@@ -122,6 +122,7 @@ CREATE TABLE seller_profiles (
   region_id BIGINT UNSIGNED NULL,
   city_id BIGINT UNSIGNED NULL,
   address VARCHAR(255) NULL,
+  preferences JSON NULL,
   verification_status ENUM('not_submitted','pending','approved','rejected') NOT NULL DEFAULT 'not_submitted',
   verification_notes TEXT NULL,
   verified_by BIGINT UNSIGNED NULL,
@@ -137,6 +138,29 @@ CREATE TABLE seller_profiles (
   CONSTRAINT fk_seller_city FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE SET NULL,
   CONSTRAINT fk_seller_verifier FOREIGN KEY (verified_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT chk_seller_commission CHECK (commission_rate BETWEEN 0 AND 100)
+) ENGINE=InnoDB;
+
+-- Business documents uploaded by a seller for verification. Files are stored
+-- outside the document root; only generated paths/URLs are persisted.
+CREATE TABLE seller_documents (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  seller_id BIGINT UNSIGNED NOT NULL,
+  document_type VARCHAR(60) NOT NULL,
+  label VARCHAR(120) NULL,
+  file_url VARCHAR(2048) NOT NULL,
+  file_path VARCHAR(500) NOT NULL,
+  original_name VARCHAR(255) NULL,
+  mime_type VARCHAR(100) NOT NULL,
+  size_bytes BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  review_notes VARCHAR(500) NULL,
+  reviewed_by BIGINT UNSIGNED NULL,
+  reviewed_at DATETIME NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_seller_documents_seller (seller_id, created_at),
+  CONSTRAINT fk_seller_documents_seller FOREIGN KEY (seller_id) REFERENCES seller_profiles(id) ON DELETE CASCADE,
+  CONSTRAINT fk_seller_documents_reviewer FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------------
@@ -571,6 +595,8 @@ CREATE TABLE product_reviews (
   status ENUM('pending','published','hidden','rejected') NOT NULL DEFAULT 'pending',
   seller_reply TEXT NULL,
   seller_replied_at DATETIME NULL,
+  admin_reply TEXT NULL,
+  admin_replied_at DATETIME NULL,
   moderated_by BIGINT UNSIGNED NULL,
   moderated_at DATETIME NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

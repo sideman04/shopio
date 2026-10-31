@@ -313,4 +313,50 @@ final class AdminValidator
             'assigned_to' => 'nullable|integer|min:1',
         ]);
     }
+
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
+    public static function orderNote(array $data): array
+    {
+        return Validator::check($data, [
+            'note' => 'required|safe_text|string|min:2|max:500',
+        ]);
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
+    public static function orderItemFulfillment(array $data): array
+    {
+        return Validator::check($data, [
+            'status' => 'required|in:processing,shipped,delivered,cancelled,returned',
+            'note' => 'nullable|safe_text|string|max:500',
+        ]);
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
+    public static function refundCreate(array $data): array
+    {
+        return Validator::check($data, [
+            'amount' => 'sometimes|nullable|decimal|min:0.01|max:99999999999',
+            'reason' => 'required|safe_text|string|min:3|max:500',
+        ]);
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
+    public static function reviewReply(array $data): array
+    {
+        return Validator::check($data, [
+            'reply' => 'required|safe_text|string|min:1|max:2000',
+        ]);
+    }
 }

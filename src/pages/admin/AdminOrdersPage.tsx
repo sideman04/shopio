@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Ban, Download, MoreHorizontal, Receipt, Truck } from 'lucide-react'
+import { Ban, Check, Download, Receipt, Truck } from 'lucide-react'
 import {
   Button,
   Checkbox,
   ConfirmDialog,
-  Dropdown,
   EmptyState,
   PageHeader,
   Pagination,
@@ -19,13 +18,17 @@ import {
   THead,
   TR,
   Table,
+  type DropdownItem,
 } from '@/components/ui'
 import { DataToolbar } from '@/components/tables/DataToolbar'
+import { RowActions } from '@/components/tables/RowActions'
 import { orderService } from '@/services'
+import { errorMessage } from '@/services/apiClient'
 import { useOrderStore } from '@/context/orderStore'
 import { toast } from '@/context/uiStore'
 import type { Order, OrderStatus } from '@/types'
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils'
+import { nextOrderStatuses as nextStatuses } from '@/lib/orderTransitions'
 
 const PAGE_SIZE = 8
 
@@ -66,13 +69,16 @@ export default function AdminOrdersPage() {
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null)
   const [bulk, setBulk] = useState<'shipped' | 'cancelled' | null>(null)
   const [busy, setBusy] = useState(false)
+  const [actionBusy, setActionBusy] = useState<number | null>(null)
 
   useEffect(() => {
     setPage(1)
   }, [search, status, payment, fulfillment, range])
 
   useEffect(() => {
-    void orderService.queryOrders({ pageSize: 100, scope: 'admin' }).catch(() => undefined)
+    void orderService
+      .queryOrders({ pageSize: 100, scope: 'admin' })
+      .catch((error) => toast.error('Could not load orders', errorMessage(error)))
   }, [])
 
   const filtered = useMemo(() => {
@@ -127,35 +133,150 @@ export default function AdminOrdersPage() {
   }
 
   const changeStatus = async (order: Order, next: OrderStatus) => {
-    await orderService.updateOrderStatus(order.id, next)
-    toast.success('Order updated', `${order.orderNumber} is now ${next.replace(/_/g, ' ')}.`)
+    setActionBusy(order.id)
+    try {
+      await orderService.updateOrderStatus(order.id, next)
+      toast.success('Order updated', `${order.orderNumber} is now ${next.replace(/_/g, ' ')}.`)
+    } catch (error) {
+      toast.error('Order not updated', errorMessage(error))
+    } finally {
+      setActionBusy(null)
+    }
   }
 
   const markPaid = async (order: Order) => {
-    await orderService.updatePaymentStatus(order.id, 'paid')
-    toast.success('Payment marked as paid', `Payment for ${order.orderNumber} was marked as paid.`)
+    setActionBusy(order.id)
+    try {
+      await orderService.updatePaymentStatus(order.id, 'paid')
+      toast.success('Payment marked as paid', `Payment for ${order.orderNumber} was marked as paid.`)
+    } catch (error) {
+      toast.error('Payment not updated', errorMessage(error))
+    } finally {
+      setActionBusy(null)
+    }
   }
 
   const cancel = async (order: Order) => {
-    await orderService.updateOrderStatus(order.id, 'cancelled')
-    toast.success('Order cancelled', `${order.orderNumber} was cancelled.`)
-    setCancelTarget(null)
+    setBusy(true)
+    try {
+      await orderService.updateOrderStatus(order.id, 'cancelled')
+      toast.success('Order cancelled', `${order.orderNumber} was cancelled.`)
+      setCancelTarget(null)
+    } catch (error) {
+      toast.error('Order not cancelled', errorMessage(error))
+    } finally {
+      setBusy(false)
+    }
   }
 
   const runBulk = async () => {
     if (!bulk) return
-    setBusy(true)
-    try {
-      await Promise.all(selected.map((id) => orderService.updateOrderStatus(id, bulk)))
-      toast.success(
-        bulk === 'shipped' ? 'Orders marked as shipped' : 'Orders cancelled',
-        `${selected.length} order(s) updated.`,
+    const eligible = orders.filter(
+      (order) => selected.includes(order.id) && nextStatuses(order.status).includes(bulk),
+    )
+    if (eligible.length === 0) {
+      toast.error(
+        'No eligible orders',
+        bulk === 'shipped'
+          ? 'Only confirmed, processing or partially shipped orders can be marked as shipped.'
+          : 'Only pending, confirmed or processing orders can be cancelled.',
       )
       setBulk(null)
+      return
+    }
+
+    setBusy(true)
+    try {
+      const results = await Promise.allSettled(
+        eligible.map((order) => orderService.updateOrderStatus(order.id, bulk)),
+      )
+      const failed = results.filter((result) => result.status === 'rejected').length
+      const skipped = selected.length - eligible.length
+      const detail = [
+        `${eligible.length - failed} order(s) updated.`,
+        skipped > 0 ? `${skipped} skipped because of their current status.` : '',
+        failed > 0 ? `${failed} could not be updated.` : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+
+      if (failed > 0) {
+        toast.error('Some orders were not updated', detail)
+      } else {
+        toast.success(
+          bulk === 'shipped' ? 'Orders marked as shipped' : 'Orders cancelled',
+          detail,
+        )
+      }
+      setBulk(null)
       setSelected([])
+    } catch (error) {
+      toast.error('Bulk update failed', errorMessage(error))
     } finally {
       setBusy(false)
     }
+  }
+
+  const actionsFor = (order: Order): DropdownItem[] => {
+    const transitions = nextStatuses(order.status)
+    const actions: DropdownItem[] = [
+      { label: 'View details', to: `/admin/orders/${order.id}` },
+    ]
+    const disabled = actionBusy === order.id
+
+    if (transitions.includes('confirmed')) {
+      actions.push({
+        label: 'Mark confirmed',
+        icon: <Check className="h-4 w-4" />,
+        divider: true,
+        disabled,
+        onClick: () => changeStatus(order, 'confirmed'),
+      })
+    }
+    if (transitions.includes('processing')) {
+      actions.push({
+        label: 'Mark processing',
+        disabled,
+        onClick: () => changeStatus(order, 'processing'),
+      })
+    }
+    if (transitions.includes('shipped')) {
+      actions.push({
+        label: 'Mark shipped',
+        icon: <Truck className="h-4 w-4" />,
+        disabled,
+        onClick: () => changeStatus(order, 'shipped'),
+      })
+    }
+    if (transitions.includes('delivered')) {
+      actions.push({
+        label: 'Mark delivered',
+        icon: <Truck className="h-4 w-4" />,
+        disabled,
+        onClick: () => changeStatus(order, 'delivered'),
+      })
+    }
+    if (order.paymentStatus !== 'paid' && order.paymentStatus !== 'refunded') {
+      actions.push({
+        label: 'Mark as paid',
+        icon: <Receipt className="h-4 w-4" />,
+        divider: true,
+        disabled,
+        onClick: () => markPaid(order),
+      })
+    }
+    if (transitions.includes('cancelled')) {
+      actions.push({
+        label: 'Cancel order',
+        icon: <Ban className="h-4 w-4" />,
+        tone: 'danger',
+        divider: true,
+        disabled,
+        onClick: () => setCancelTarget(order),
+      })
+    }
+
+    return actions
   }
 
   const handleExport = () => {
@@ -293,13 +414,27 @@ export default function AdminOrdersPage() {
               {paged.map((order) => (
                 <div key={order.id} className="space-y-3 p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <Link to={`/admin/orders/${order.id}`} className="font-medium text-ink underline-offset-2 hover:underline">
-                        {order.orderNumber}
-                      </Link>
-                      <p className="text-xs text-ink-500">{formatDate(order.placedAt, 'time')}</p>
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        checked={selected.includes(order.id)}
+                        onChange={() => toggleOne(order.id)}
+                        aria-label={`Select ${order.orderNumber}`}
+                      />
+                      <div>
+                        <Link to={`/admin/orders/${order.id}`} className="font-medium text-ink underline-offset-2 hover:underline">
+                          {order.orderNumber}
+                        </Link>
+                        <p className="text-xs text-ink-500">{formatDate(order.placedAt, 'time')}</p>
+                      </div>
                     </div>
-                    <StatusBadge status={order.status} kind="order" />
+                    <div className="flex items-center gap-2">
+                      <StatusBadge status={order.status} kind="order" />
+                      <RowActions
+                        label={`Actions for ${order.orderNumber}`}
+                        items={actionsFor(order)}
+                        showLabel={false}
+                      />
+                    </div>
                   </div>
                   <p className="text-sm text-ink-700">{order.customerName}</p>
                   <div className="flex flex-wrap items-center gap-2">
@@ -377,30 +512,9 @@ export default function AdminOrdersPage() {
                         <StatusBadge status={order.status} kind="order" />
                       </TD>
                       <TD className="text-right">
-                        <Dropdown
+                        <RowActions
                           label={`Actions for ${order.orderNumber}`}
-                          trigger={
-                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </span>
-                          }
-                          items={[
-                            { label: 'View details', to: `/admin/orders/${order.id}` },
-                            { label: 'Mark confirmed', divider: true, onClick: () => changeStatus(order, 'confirmed') },
-                            { label: 'Mark processing', onClick: () => changeStatus(order, 'processing') },
-                            { label: 'Mark shipped', onClick: () => changeStatus(order, 'shipped') },
-                            { label: 'Mark delivered', onClick: () => changeStatus(order, 'delivered') },
-                            {
-                              label: 'Mark as paid',
-                              divider: true,
-                              onClick: () => markPaid(order),
-                            },
-                            {
-                              label: 'Cancel order',
-                              tone: 'danger',
-                              onClick: () => setCancelTarget(order),
-                            },
-                          ]}
+                          items={actionsFor(order)}
                         />
                       </TD>
                     </TR>
@@ -435,7 +549,11 @@ export default function AdminOrdersPage() {
         onClose={() => setBulk(null)}
         onConfirm={runBulk}
         title={bulk === 'shipped' ? 'Mark selected orders as shipped?' : 'Cancel selected orders?'}
-        description={`This affects ${selected.length} order(s).`}
+        description={
+          bulk
+            ? `${orders.filter((order) => selected.includes(order.id) && nextStatuses(order.status).includes(bulk)).length} of ${selected.length} selected order(s) are eligible for this action.`
+            : ''
+        }
         confirmLabel={bulk === 'shipped' ? 'Mark shipped' : 'Cancel orders'}
         tone={bulk === 'shipped' ? 'default' : 'danger'}
         loading={busy}

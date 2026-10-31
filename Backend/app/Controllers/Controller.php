@@ -45,6 +45,29 @@ abstract class Controller
         return Response::noContent();
     }
 
+    /**
+     * Builds a binary file response (media or verification document).
+     *
+     * @param array<string,string> $headers
+     */
+    protected function file(
+        string $body,
+        string $mime,
+        string $filename,
+        bool $inline = true,
+        array $headers = [],
+    ): Response {
+        $fallback = preg_replace('/[^A-Za-z0-9._-]+/', '_', $filename) ?: 'file';
+        $disposition = ($inline ? 'inline' : 'attachment') . '; filename="' . $fallback . '"';
+
+        return new Response(200, $body, array_merge([
+            'Content-Type' => $mime,
+            'Content-Length' => (string) strlen($body),
+            'Content-Disposition' => $disposition,
+            'X-Content-Type-Options' => 'nosniff',
+        ], $headers));
+    }
+
     protected function paginated(mixed $items, int $total, int $page, int $perPage, string $message = 'Request completed successfully', ?Request $request = null): Response
     {
         $totalPages = $perPage > 0 ? (int) ceil($total / $perPage) : 0;

@@ -18,10 +18,10 @@ import {
   CardBody,
   CardHeader,
   CardTitle,
+  ImageUpload,
   Input,
   PageHeader,
   Select,
-  SmartImage,
   StatusBadge,
   Stars,
   Textarea,
@@ -29,6 +29,7 @@ import {
 import { useAuthStore, useSeller, useSellerProducts } from '@/context'
 import { toast } from '@/context/uiStore'
 import { geoService, sellerService } from '@/services'
+import { errorMessage } from '@/services/apiClient'
 import { PHOTOS, imgSquare, imgWide } from '@/content/images'
 import { businessCategories } from '@/content/marketing'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -128,19 +129,24 @@ export default function SellerStorePage() {
 
   const onSubmit = handleSubmit(async (values) => {
     setSaving(true)
-    await sellerService.updateSellerStore({
-      storeName: values.storeName.trim(),
-      businessCategory: values.businessCategory,
-      storeDescription: values.storeDescription.trim(),
-      contactPhone: values.phone.trim() || null,
-      regionId: values.regionId ? Number(values.regionId) : null,
-      cityId: values.cityId ? Number(values.cityId) : null,
-      address: values.address.trim() || null,
-      logoUrl: values.logoUrl.trim() || null,
-      bannerUrl: values.bannerUrl.trim() || null,
-    })
-    setSaving(false)
-    toast.success('Store updated', 'Your store profile has been saved.')
+    try {
+      await sellerService.updateSellerStore({
+        storeName: values.storeName.trim(),
+        businessCategory: values.businessCategory,
+        storeDescription: values.storeDescription.trim(),
+        contactPhone: values.phone.trim() || null,
+        regionId: values.regionId ? Number(values.regionId) : null,
+        cityId: values.cityId ? Number(values.cityId) : null,
+        address: values.address.trim() || null,
+        logoUrl: values.logoUrl.trim() || null,
+        bannerUrl: values.bannerUrl.trim() || null,
+      })
+      toast.success('Store updated', 'Your store profile has been saved.')
+    } catch (error) {
+      toast.error('Could not save store profile', errorMessage(error))
+    } finally {
+      setSaving(false)
+    }
   })
 
   const healthChecks = [
@@ -250,31 +256,33 @@ export default function SellerStorePage() {
             <CardBody className="space-y-6">
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-3">
+                  <ImageUpload
+                    label="Upload logo"
+                    hint="Square JPG, PNG or WebP up to 5 MB"
+                    value={logoUrl || null}
+                    onChange={(url) => setValue('logoUrl', url ?? '', { shouldDirty: true })}
+                    previewClassName="aspect-square w-32"
+                  />
                   <Input
-                    label="Logo URL"
+                    label="Or paste a logo URL"
                     placeholder="https://…"
                     error={errors.logoUrl?.message}
                     {...register('logoUrl')}
                   />
-                  <SmartImage
-                    src={logoUrl || undefined}
-                    alt="Store logo preview"
-                    wrapperClassName="aspect-square w-32 rounded-card border border-ink-200"
-                    fallbackLabel="Logo"
-                  />
                 </div>
                 <div className="space-y-3">
+                  <ImageUpload
+                    label="Upload banner"
+                    hint="Wide JPG, PNG or WebP up to 5 MB"
+                    value={bannerUrl || null}
+                    onChange={(url) => setValue('bannerUrl', url ?? '', { shouldDirty: true })}
+                    previewClassName="aspect-[16/6] w-full"
+                  />
                   <Input
-                    label="Banner URL"
+                    label="Or paste a banner URL"
                     placeholder="https://…"
                     error={errors.bannerUrl?.message}
                     {...register('bannerUrl')}
-                  />
-                  <SmartImage
-                    src={bannerUrl || undefined}
-                    alt="Store banner preview"
-                    wrapperClassName="aspect-[16/6] w-full rounded-card border border-ink-200"
-                    fallbackLabel="Banner"
                   />
                 </div>
               </div>

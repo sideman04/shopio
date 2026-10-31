@@ -4,7 +4,6 @@ import {
   EyeOff,
   Flag,
   MessageSquare,
-  MoreHorizontal,
   Star,
   Trash2,
   X,
@@ -15,7 +14,6 @@ import {
   Button,
   Checkbox,
   ConfirmDialog,
-  Dropdown,
   EmptyState,
   Modal,
   PageHeader,
@@ -27,7 +25,9 @@ import {
   Textarea,
 } from '@/components/ui'
 import { DataToolbar } from '@/components/tables/DataToolbar'
+import { RowActions } from '@/components/tables/RowActions'
 import { reviewService } from '@/services'
+import { errorMessage } from '@/services/apiClient'
 import { useCatalogStore } from '@/context/catalogStore'
 import { toast } from '@/context/uiStore'
 import type { Review } from '@/types'
@@ -76,7 +76,12 @@ export default function AdminReviewsPage() {
     void Promise.allSettled([
       reviewService.fetchAdminReviews({ pageSize: 100 }),
       reviewService.fetchReviewReports(),
-    ])
+    ]).then((results) => {
+      const failed = results.find((result) => result.status === 'rejected')
+      if (failed?.status === 'rejected') {
+        toast.error('Could not load reviews', errorMessage(failed.reason))
+      }
+    })
   }, [])
 
   const products = useMemo(() => {
@@ -130,13 +135,20 @@ export default function AdminReviewsPage() {
     setSelected((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]))
 
   const moderate = async (review: Review, status: Review['status']) => {
-    await reviewService.moderateReview(review.id, status)
-    toast.success(`Review ${status}`, `${review.customerName ?? 'Review'} on ${review.productName ?? 'product'}.`)
+    setBusy(true)
+    try {
+      await reviewService.moderateReview(review.id, status)
+      toast.success(`Review ${status}`, `${review.customerName ?? 'Review'} on ${review.productName ?? 'product'}.`)
+    } catch (error) {
+      toast.error('Could not update review', errorMessage(error))
+    } finally {
+      setBusy(false)
+    }
   }
 
   const openReply = (review: Review) => {
     setReplyReview(review)
-    setReplyText(review.sellerReply ?? '')
+    setReplyText(review.adminReply ?? review.sellerReply ?? '')
   }
 
   const saveReply = async () => {
@@ -147,16 +159,19 @@ export default function AdminReviewsPage() {
     }
     setBusy(true)
     try {
-      await reviewService.replyToReview(replyReview.id, replyText.trim())
-      toast.success('Reply published', `Your reply to ${replyReview.customerName ?? 'the customer'} is now visible.`)
+      await reviewService.replyAsAdmin(replyReview.id, replyText.trim())
+      toast.success('Reply published', `Your official reply to ${replyReview.customerName ?? 'the customer'} is now visible.`)
       setReplyReview(null)
       setReplyText('')
+    } catch (error) {
+      toast.error('Could not publish reply', errorMessage(error))
     } finally {
       setBusy(false)
     }
   }
 
   const dismissReport = async (review: Review) => {
+    setBusy(true)
     try {
       await reviewService.moderateReview(review.id, 'published')
       useCatalogStore.setState((s) => ({
@@ -164,18 +179,23 @@ export default function AdminReviewsPage() {
       }))
       toast.success('Report dismissed', 'The review was kept and the report was cleared.')
     } catch (error) {
-      toast.error('Could not dismiss report', error instanceof Error ? error.message : 'Please try again.')
+      toast.error('Could not dismiss report', errorMessage(error))
+    } finally {
+      setBusy(false)
     }
   }
 
   const remove = async (review: Review) => {
+    setBusy(true)
     try {
       await reviewService.moderateReview(review.id, 'rejected', 'Removed by administrator')
       toast.success('Review removed', 'The review is no longer visible in the storefront.')
       setDeleteTarget(null)
       setSelected((current) => current.filter((id) => id !== review.id))
     } catch (error) {
-      toast.error('Review not removed', error instanceof Error ? error.message : 'Please try again.')
+      toast.error('Review not removed', errorMessage(error))
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -187,6 +207,8 @@ export default function AdminReviewsPage() {
       toast.success('Reviews updated', `${selected.length} review(s) set to ${bulk}.`)
       setBulk(null)
       setSelected([])
+    } catch (error) {
+      toast.error('Could not update reviews', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -305,6 +327,12 @@ export default function AdminReviewsPage() {
                         <span className="font-medium">Report reason:</span> {review.reportReason}
                       </p>
                     )}
+                    {review.adminReply && (
+                      <div className="mt-3 rounded-lg border-l-2 border-gold-500 bg-gold-500/5 px-3 py-2">
+                        <p className="text-xs font-medium text-gold-600">Official reply</p>
+                        <p className="mt-0.5 text-sm text-ink-700">{review.adminReply}</p>
+                      </div>
+                    )}
                     {review.sellerReply && (
                       <div className="mt-3 rounded-lg border-l-2 border-ink-300 bg-ink-50/60 px-3 py-2">
                         <p className="text-xs font-medium text-ink-500">Seller reply</p>
@@ -315,20 +343,23 @@ export default function AdminReviewsPage() {
                       {review.productName ?? 'Product'} · {formatDate(review.createdAt)}
                     </p>
                   </div>
-                  <Dropdown
+                  <RowActions
                     label="Review actions"
-                    trigger={
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </span>
-                    }
                     items={[
-                      { label: 'Publish', icon: <Check className="h-4 w-4" />, onClick: () => moderate(review, 'published') },
-                      { label: 'Hide', icon: <EyeOff className="h-4 w-4" />, onClick: () => moderate(review, 'hidden') },
-                      { label: 'Reject', icon: <X className="h-4 w-4" />, onClick: () => moderate(review, 'rejected') },
-                      { label: 'Reply', icon: <MessageSquare className="h-4 w-4" />, divider: true, onClick: () => openReply(review) },
-                      ...(review.reported ? [{ label: 'Dismiss report', icon: <Check className="h-4 w-4" />, onClick: () => dismissReport(review) }] : []),
-                      { label: 'Delete', icon: <Trash2 className="h-4 w-4" />, tone: 'danger' as const, divider: true, onClick: () => setDeleteTarget(review) },
+                      ...(review.status !== 'published'
+                        ? [{ label: 'Publish', icon: <Check className="h-4 w-4" />, disabled: busy, onClick: () => moderate(review, 'published') }]
+                        : []),
+                      ...(review.status !== 'hidden'
+                        ? [{ label: 'Hide', icon: <EyeOff className="h-4 w-4" />, disabled: busy, onClick: () => moderate(review, 'hidden') }]
+                        : []),
+                      ...(review.status !== 'rejected'
+                        ? [{ label: 'Reject', icon: <X className="h-4 w-4" />, disabled: busy, onClick: () => moderate(review, 'rejected') }]
+                        : []),
+                      { label: 'Reply', icon: <MessageSquare className="h-4 w-4" />, divider: true, disabled: busy, onClick: () => openReply(review) },
+                      ...(review.reported ? [{ label: 'Dismiss report', icon: <Check className="h-4 w-4" />, disabled: busy, onClick: () => dismissReport(review) }] : []),
+                      ...(review.status !== 'rejected'
+                        ? [{ label: 'Delete', icon: <Trash2 className="h-4 w-4" />, tone: 'danger' as const, divider: true, disabled: busy, onClick: () => setDeleteTarget(review) }]
+                        : []),
                     ]}
                   />
                 </div>
@@ -366,8 +397,8 @@ export default function AdminReviewsPage() {
       <Modal
         open={!!replyReview}
         onClose={() => setReplyReview(null)}
-        title="Reply to review"
-        description={replyReview ? `Replying to ${replyReview.customerName ?? 'the customer'}.` : undefined}
+        title="Post an official reply"
+        description={replyReview ? `This reply will be visible to everyone alongside the review from ${replyReview.customerName ?? 'the customer'}.` : undefined}
         size="md"
         footer={
           <>
@@ -380,7 +411,13 @@ export default function AdminReviewsPage() {
           </>
         }
       >
-        <Textarea label="Your reply" value={replyText} onChange={(e) => setReplyText(e.target.value)} required />
+        <Textarea
+          label="Official reply"
+          hint="Keep it factual and courteous. This is shown publicly, not as a private message."
+          value={replyText}
+          onChange={(e) => setReplyText(e.target.value)}
+          required
+        />
       </Modal>
 
       <ConfirmDialog

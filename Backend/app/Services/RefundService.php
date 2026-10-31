@@ -66,6 +66,40 @@ final class RefundService
     }
 
     /**
+     * Administrators can open a refund request for any order. The request is
+     * recorded immediately; processing it through the gateway is a separate
+     * decision so the money movement remains auditable.
+     *
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
+    public function requestByAdmin(AuthenticatedUser $auth, int $orderId, array $data, Request $request): array
+    {
+        $order = $this->orders->findById($orderId);
+        if ($order === null) {
+            throw new NotFoundException('The requested order does not exist.');
+        }
+
+        $payment = $this->payments->latestSucceededForOrder($orderId);
+        if ($payment === null) {
+            throw new ConflictException('This order has no captured payment to refund.');
+        }
+
+        $amount = isset($data['amount']) && $data['amount'] !== ''
+            ? Money::format((string) $data['amount'])
+            : $this->refundableAmount($orderId);
+
+        if (Money::isZero($amount)) {
+            throw new ConflictException('This order has no remaining refundable balance.');
+        }
+
+        $refundId = $this->createWithinLimit($orderId, (int) $payment['id'], $auth->id, $amount, (string) $data['reason']);
+        $this->audit->record($auth, 'refund.created_by_admin', 'refund', $refundId, $request, ['order_id' => $orderId]);
+
+        return Presenter::refund($this->refunds->findById($refundId) ?? []);
+    }
+
+    /**
      * @return array<string,mixed>
      */
     public function decide(AuthenticatedUser $auth, int $refundId, array $data, Request $request): array
@@ -82,9 +116,11 @@ final class RefundService
                 throw new ConflictException('This refund has already been finalised.');
             }
 
-            if ($decision === 'rejected') {
-                $this->refunds->updateStatus($refundId, 'rejected', $auth->id);
-                $this->audit->record($auth, 'refund.rejected', 'refund', $refundId, $request, ['note' => $data['note'] ?? null]);
+            if (in_array($decision, ['approved', 'processing', 'rejected', 'failed'], true)) {
+                // Intermediate/failed decisions are bookkeeping only. Money is
+                // moved exactly once, by the explicit 'succeeded' decision.
+                $this->refunds->updateStatus($refundId, $decision, $auth->id);
+                $this->audit->record($auth, 'refund.' . $decision, 'refund', $refundId, $request, ['note' => $data['note'] ?? null]);
 
                 return $this->refunds->findById($refundId) ?? $refund;
             }

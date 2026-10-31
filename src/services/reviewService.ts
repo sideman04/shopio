@@ -49,6 +49,13 @@ export async function replyToReview(reviewId: number, reply: string): Promise<Re
   return review
 }
 
+export async function replyAsAdmin(reviewId: number, reply: string): Promise<Review> {
+  const response = await api.post<Record<string, unknown>>(`/admin/reviews/${reviewId}/reply`, { reply })
+  const review = mapReview(response.data)
+  useCatalogStore.getState().upsertReview(review)
+  return review
+}
+
 export async function moderateReview(reviewId: number, status: Review['status'], note?: string): Promise<Review> {
   const response = await api.patch<Record<string, unknown>>(`/admin/reviews/${reviewId}`, {
     status,

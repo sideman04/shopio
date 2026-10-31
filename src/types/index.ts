@@ -103,6 +103,7 @@ export interface Seller {
   contactPhone?: string | null
   regionId?: number | null
   cityId?: number | null
+  preferences?: Record<string, unknown> | null
   verificationStatus: VerificationStatus
   verificationNotes?: string | null
   commissionRate: number
@@ -117,6 +118,30 @@ export interface Seller {
   totalSales?: number
   rating?: number
   reviewCount?: number
+}
+
+export type SellerDocumentType =
+  | 'business_licence'
+  | 'tax_certificate'
+  | 'id_document'
+  | 'address_proof'
+  | 'bank_statement'
+  | 'other'
+
+export interface SellerDocument {
+  id: number
+  sellerId: number
+  documentType: SellerDocumentType
+  label: string | null
+  fileUrl: string
+  originalName: string | null
+  mimeType: string
+  sizeBytes: number
+  status: 'pending' | 'approved' | 'rejected'
+  reviewNotes: string | null
+  reviewedByName?: string | null
+  reviewedAt: string | null
+  createdAt: string
 }
 
 /* -------------------------------------------------------------------------- */
@@ -183,6 +208,8 @@ export interface Review {
   status: 'pending' | 'published' | 'hidden' | 'rejected'
   sellerReply: string | null
   sellerRepliedAt: string | null
+  adminReply?: string | null
+  adminRepliedAt?: string | null
   createdAt: string
   /** Hydrated. */
   customerName?: string

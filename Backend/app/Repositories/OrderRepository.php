@@ -208,6 +208,17 @@ final class OrderRepository extends Repository
         return $this->db->lastInsertId();
     }
 
+    /**
+     * @return array<string,mixed>|null
+     */
+    public function itemById(int $itemId): ?array
+    {
+        return $this->db->selectOne(
+            'SELECT * FROM order_items WHERE id = :id LIMIT 1',
+            ['id' => $itemId],
+        );
+    }
+
     public function setItemFulfillment(int $itemId, string $status): void
     {
         $this->db->execute(

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Banknote, Check, Download, RotateCcw, Wallet, X } from 'lucide-react'
 import {
+  Alert,
   Badge,
   Button,
+  ConfirmDialog,
   EmptyState,
   Modal,
   PageHeader,
@@ -18,10 +20,13 @@ import {
   TR,
   Table,
   Textarea,
+  type DropdownItem,
 } from '@/components/ui'
 import { DataToolbar } from '@/components/tables/DataToolbar'
+import { RowActions } from '@/components/tables/RowActions'
 import { toast } from '@/context/uiStore'
 import { adminService } from '@/services'
+import { errorMessage } from '@/services/apiClient'
 import type { Refund, SellerPayout, Transaction } from '@/types'
 import { formatCurrency, formatDate, truncate } from '@/lib/utils'
 
@@ -81,10 +86,15 @@ export default function AdminTransactionsPage() {
   const [payoutPage, setPayoutPage] = useState(1)
   const [payoutDetail, setPayoutDetail] = useState<SellerPayout | null>(null)
   const [rejectPayout, setRejectPayout] = useState<SellerPayout | null>(null)
+  const [approvePayoutTarget, setApprovePayoutTarget] = useState<SellerPayout | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [refundBusy, setRefundBusy] = useState<number | null>(null)
+  const [payoutBusy, setPayoutBusy] = useState<number | null>(null)
 
   const load = async () => {
     setLoading(true)
+    setLoadError(null)
     try {
       const [tx, refunds, payouts] = await Promise.all([
         adminService.fetchTransactions({ pageSize: 100 }),
@@ -95,7 +105,9 @@ export default function AdminTransactionsPage() {
       setRefundList(refunds.items)
       setPayoutList(payouts.items)
     } catch (error) {
-      toast.error('Could not load ledgers', error instanceof Error ? error.message : 'Please try again.')
+      const message = errorMessage(error)
+      setLoadError(message)
+      toast.error('Could not load ledgers', message)
     } finally {
       setLoading(false)
     }
@@ -152,23 +164,31 @@ export default function AdminTransactionsPage() {
     refund: Refund,
     next: 'approved' | 'rejected' | 'processing' | 'succeeded' | 'failed',
   ) => {
+    setRefundBusy(refund.id)
     try {
       const updated = await adminService.decideRefund(refund.id, next)
       setRefundList((list) => list.map((r) => (r.id === refund.id ? updated : r)))
       setRefundDetail(null)
       toast.success(`Refund marked as ${next}`, `Refund for ${refund.orderNumber} was updated.`)
     } catch (error) {
-      toast.error('Refund not updated', error instanceof Error ? error.message : 'Please try again.')
+      toast.error('Refund not updated', errorMessage(error))
+    } finally {
+      setRefundBusy(null)
     }
   }
 
-  const approvePayout = async (payout: SellerPayout) => {
+  const confirmApprovePayout = async () => {
+    if (!approvePayoutTarget) return
+    setPayoutBusy(approvePayoutTarget.id)
     try {
-      const updated = await adminService.decidePayout(payout.id, 'paid')
-      setPayoutList((list) => list.map((p) => (p.id === payout.id ? updated : p)))
-      toast.success('Payout approved', `${payout.payoutReference} was marked as paid.`)
+      const updated = await adminService.decidePayout(approvePayoutTarget.id, 'paid')
+      setPayoutList((list) => list.map((p) => (p.id === approvePayoutTarget.id ? updated : p)))
+      toast.success('Payout approved', `${approvePayoutTarget.payoutReference} was marked as paid.`)
+      setApprovePayoutTarget(null)
     } catch (error) {
-      toast.error('Payout not approved', error instanceof Error ? error.message : 'Please try again.')
+      toast.error('Payout not approved', errorMessage(error))
+    } finally {
+      setPayoutBusy(null)
     }
   }
 
@@ -178,6 +198,7 @@ export default function AdminTransactionsPage() {
       toast.error('A reason is required', 'Explain why the payout was rejected.')
       return
     }
+    setPayoutBusy(rejectPayout.id)
     try {
       const updated = await adminService.decidePayout(rejectPayout.id, 'rejected', rejectReason.trim())
       setPayoutList((list) => list.map((p) => (p.id === rejectPayout.id ? updated : p)))
@@ -185,8 +206,81 @@ export default function AdminTransactionsPage() {
       setRejectPayout(null)
       setRejectReason('')
     } catch (error) {
-      toast.error('Payout not rejected', error instanceof Error ? error.message : 'Please try again.')
+      toast.error('Payout not rejected', errorMessage(error))
+    } finally {
+      setPayoutBusy(null)
     }
+  }
+
+  const refundActions = (refund: Refund): DropdownItem[] => {
+    const actions: DropdownItem[] = [
+      { label: 'View details', onClick: () => setRefundDetail(refund) },
+    ]
+    if (['succeeded', 'rejected', 'failed'].includes(refund.status)) {
+      return actions
+    }
+
+    const disabled = refundBusy === refund.id
+    if (refund.status === 'requested') {
+      actions.push({
+        label: 'Approve request',
+        icon: <Check className="h-4 w-4" />,
+        divider: true,
+        disabled,
+        onClick: () => updateRefund(refund, 'approved'),
+      })
+    }
+    if (refund.status === 'requested' || refund.status === 'approved') {
+      actions.push({
+        label: 'Mark processing',
+        disabled,
+        onClick: () => updateRefund(refund, 'processing'),
+      })
+    }
+    actions.push({
+      label: 'Complete refund',
+      icon: <RotateCcw className="h-4 w-4" />,
+      divider: true,
+      disabled,
+      onClick: () => updateRefund(refund, 'succeeded'),
+    })
+    actions.push({
+      label: 'Reject request',
+      icon: <X className="h-4 w-4" />,
+      tone: 'danger',
+      divider: true,
+      disabled,
+      onClick: () => updateRefund(refund, 'rejected'),
+    })
+
+    return actions
+  }
+
+  const payoutActions = (payout: SellerPayout): DropdownItem[] => {
+    const actions: DropdownItem[] = [
+      { label: 'View details', onClick: () => setPayoutDetail(payout) },
+    ]
+    if (!['pending', 'processing', 'requested'].includes(payout.status)) {
+      return actions
+    }
+
+    const disabled = payoutBusy === payout.id
+    actions.push({
+      label: 'Approve & pay',
+      icon: <Check className="h-4 w-4" />,
+      divider: true,
+      disabled,
+      onClick: () => setApprovePayoutTarget(payout),
+    })
+    actions.push({
+      label: 'Reject payout',
+      icon: <X className="h-4 w-4" />,
+      tone: 'danger',
+      disabled,
+      onClick: () => setRejectPayout(payout),
+    })
+
+    return actions
   }
 
   const handleExport = () => {
@@ -221,6 +315,17 @@ export default function AdminTransactionsPage() {
           </Button>
         }
       />
+
+      {loadError && (
+        <Alert tone="danger" title="Could not load ledgers">
+          <div className="flex flex-wrap items-center gap-3">
+            <span>{loadError}</span>
+            <Button size="sm" variant="outline" onClick={() => void load()} loading={loading}>
+              Retry
+            </Button>
+          </div>
+        </Alert>
+      )}
 
       <section aria-label="Ledger summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Gross volume" value={formatCurrency(stats.gross, { compact: true })} icon={<Banknote className="h-4 w-4" />} hint="captured" />
@@ -366,22 +471,10 @@ export default function AdminTransactionsPage() {
                       </TD>
                       <TD className="whitespace-nowrap">{formatDate(refund.createdAt)}</TD>
                       <TD className="text-right">
-                        <div className="flex flex-wrap justify-end gap-1.5">
-                          <Button size="sm" variant="outline" onClick={() => updateRefund(refund, 'approved')}>
-                            <Check className="h-3.5 w-3.5" />
-                            Approve
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => updateRefund(refund, 'processing')}>
-                            Processing
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => updateRefund(refund, 'succeeded')}>
-                            Succeeded
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => updateRefund(refund, 'rejected')}>
-                            <X className="h-3.5 w-3.5" />
-                            Reject
-                          </Button>
-                        </div>
+                        <RowActions
+                          label={`Actions for refund ${refund.id}`}
+                          items={refundActions(refund)}
+                        />
                       </TD>
                     </TR>
                   ))}
@@ -437,21 +530,10 @@ export default function AdminTransactionsPage() {
                       <TD className="whitespace-nowrap">{payout.processedAt ? formatDate(payout.processedAt) : '—'}</TD>
                       <TD className="max-w-[14rem] text-ink-600">{payout.adminNote ? truncate(payout.adminNote, 50) : '—'}</TD>
                       <TD className="text-right">
-                        <div className="flex flex-wrap justify-end gap-1.5">
-                          <Button size="sm" variant="outline" onClick={() => setPayoutDetail(payout)}>
-                            View
-                          </Button>
-                          {(payout.status === 'pending' || payout.status === 'processing' || payout.status === 'requested') && (
-                            <>
-                              <Button size="sm" onClick={() => approvePayout(payout)}>
-                                Approve &amp; pay
-                              </Button>
-                              <Button size="sm" variant="ghost" onClick={() => setRejectPayout(payout)}>
-                                Reject
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                        <RowActions
+                          label={`Actions for payout ${payout.payoutReference}`}
+                          items={payoutActions(payout)}
+                        />
                       </TD>
                     </TR>
                   ))}
@@ -544,6 +626,7 @@ export default function AdminTransactionsPage() {
           <>
             <Button
               variant="outline"
+              disabled={payoutBusy !== null}
               onClick={() => {
                 setRejectPayout(null)
                 setRejectReason('')
@@ -551,7 +634,7 @@ export default function AdminTransactionsPage() {
             >
               Cancel
             </Button>
-            <Button variant="danger" onClick={rejectPayoutConfirm}>
+            <Button variant="danger" onClick={rejectPayoutConfirm} loading={payoutBusy !== null}>
               Reject payout
             </Button>
           </>
@@ -565,6 +648,20 @@ export default function AdminTransactionsPage() {
           required
         />
       </Modal>
+
+      <ConfirmDialog
+        open={!!approvePayoutTarget}
+        onClose={() => setApprovePayoutTarget(null)}
+        onConfirm={confirmApprovePayout}
+        title="Approve and pay this payout?"
+        description={
+          approvePayoutTarget
+            ? `This releases ${formatCurrency(approvePayoutTarget.amount)} to ${approvePayoutTarget.payoutReference}. Payout approvals are final.`
+            : ''
+        }
+        confirmLabel="Approve & pay"
+        loading={payoutBusy !== null}
+      />
     </div>
   )
 }

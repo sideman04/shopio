@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Check, Copy, MoreHorizontal, Pencil, Plus, Tag, Trash2, X } from 'lucide-react'
+import { Check, Copy, Pencil, Plus, Tag, Trash2, X } from 'lucide-react'
 import {
   Badge,
   Button,
   ConfirmDialog,
-  Dropdown,
   EmptyState,
   Input,
   Modal,
@@ -21,7 +20,9 @@ import {
   Textarea,
 } from '@/components/ui'
 import { BarSeriesChart, ChartCard } from '@/components/charts/Charts'
+import { RowActions } from '@/components/tables/RowActions'
 import { adminService } from '@/services'
+import { errorMessage } from '@/services/apiClient'
 import { useCatalogStore } from '@/context/catalogStore'
 import { toast } from '@/context/uiStore'
 import type { Coupon } from '@/types'
@@ -86,6 +87,7 @@ export default function AdminPromotionsPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Coupon | null>(null)
   const [busy, setBusy] = useState(false)
+  const [actionBusy, setActionBusy] = useState<number | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Coupon | null>(null)
 
   useEffect(() => {
@@ -158,32 +160,56 @@ export default function AdminPromotionsPage() {
         toast.success('Coupon created', `${payload.code} is now available at checkout.`)
       }
       setFormOpen(false)
+    } catch (error) {
+      toast.error('Coupon not saved', errorMessage(error))
     } finally {
       setBusy(false)
     }
   })
 
   const duplicate = async (coupon: Coupon) => {
-    await adminService.createCoupon({
-      code: `${coupon.code}-COPY`,
-      description: coupon.description,
-      discountType: coupon.discountType,
-      discountValue: coupon.discountValue,
-      minimumOrderAmount: coupon.minimumOrderAmount,
-      maximumDiscountAmount: coupon.maximumDiscountAmount,
-      usageLimit: coupon.usageLimit,
-      perUserLimit: coupon.perUserLimit,
-      startsAt: coupon.startsAt,
-      expiresAt: coupon.expiresAt,
-      status: 'inactive',
-    })
-    toast.success('Coupon duplicated', `Created ${coupon.code}-COPY as inactive.`)
+    setActionBusy(coupon.id)
+    try {
+      const existing = new Set(coupons.map((row) => row.code.toUpperCase()))
+      let code = `${coupon.code}-COPY`
+      let suffix = 2
+      while (existing.has(code.toUpperCase())) {
+        code = `${coupon.code}-COPY-${suffix}`
+        suffix += 1
+      }
+
+      await adminService.createCoupon({
+        code,
+        description: coupon.description,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
+        minimumOrderAmount: coupon.minimumOrderAmount,
+        maximumDiscountAmount: coupon.maximumDiscountAmount,
+        usageLimit: coupon.usageLimit,
+        perUserLimit: coupon.perUserLimit,
+        startsAt: coupon.startsAt,
+        expiresAt: coupon.expiresAt,
+        status: 'inactive',
+      })
+      toast.success('Coupon duplicated', `Created ${code} as inactive.`)
+    } catch (error) {
+      toast.error('Could not duplicate coupon', errorMessage(error))
+    } finally {
+      setActionBusy(null)
+    }
   }
 
   const toggleStatus = async (coupon: Coupon) => {
     const next = coupon.status === 'active' ? 'inactive' : 'active'
-    await adminService.updateCoupon(coupon.id, { status: next })
-    toast.success(next === 'active' ? 'Coupon activated' : 'Coupon deactivated', `${coupon.code} is now ${next}.`)
+    setActionBusy(coupon.id)
+    try {
+      await adminService.updateCoupon(coupon.id, { status: next })
+      toast.success(next === 'active' ? 'Coupon activated' : 'Coupon deactivated', `${coupon.code} is now ${next}.`)
+    } catch (error) {
+      toast.error('Could not update coupon', errorMessage(error))
+    } finally {
+      setActionBusy(null)
+    }
   }
 
   const confirmDelete = async () => {
@@ -193,6 +219,8 @@ export default function AdminPromotionsPage() {
       await adminService.deleteCoupon(deleteTarget.id)
       toast.success('Coupon deleted', `${deleteTarget.code} was removed.`)
       setDeleteTarget(null)
+    } catch (error) {
+      toast.error('Coupon not deleted', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -282,22 +310,30 @@ export default function AdminPromotionsPage() {
                       <Badge tone={status === 'active' ? 'success' : status === 'expired' ? 'danger' : 'neutral'}>{status}</Badge>
                     </TD>
                     <TD className="text-right">
-                      <Dropdown
+                      <RowActions
                         label={`Actions for ${coupon.code}`}
-                        trigger={
-                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </span>
-                        }
                         items={[
                           { label: 'Edit', icon: <Pencil className="h-4 w-4" />, onClick: () => openEdit(coupon) },
-                          { label: 'Duplicate', icon: <Copy className="h-4 w-4" />, onClick: () => duplicate(coupon) },
+                          {
+                            label: 'Duplicate',
+                            icon: <Copy className="h-4 w-4" />,
+                            disabled: actionBusy === coupon.id,
+                            onClick: () => duplicate(coupon),
+                          },
                           {
                             label: coupon.status === 'active' ? 'Deactivate' : 'Activate',
                             icon: coupon.status === 'active' ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />,
+                            disabled: actionBusy === coupon.id,
                             onClick: () => toggleStatus(coupon),
                           },
-                          { label: 'Delete', icon: <Trash2 className="h-4 w-4" />, tone: 'danger', divider: true, onClick: () => setDeleteTarget(coupon) },
+                          {
+                            label: 'Delete',
+                            icon: <Trash2 className="h-4 w-4" />,
+                            tone: 'danger',
+                            divider: true,
+                            disabled: actionBusy === coupon.id,
+                            onClick: () => setDeleteTarget(coupon),
+                          },
                         ]}
                       />
                     </TD>

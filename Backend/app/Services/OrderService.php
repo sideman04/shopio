@@ -266,6 +266,70 @@ final class OrderService
         });
     }
 
+    /**
+     * Adds an internal note to the order history without changing its status.
+     *
+     * @param array<string,mixed> $data
+     */
+    public function addAdminNote(AuthenticatedUser $auth, int $orderId, array $data, Request $request): array
+    {
+        return $this->db->transaction(function () use ($auth, $orderId, $data, $request): array {
+            $order = $this->orders->lockById($orderId);
+            if ($order === null) {
+                throw new NotFoundException('The requested order does not exist.');
+            }
+
+            $note = trim((string) $data['note']);
+            $this->orders->addHistory($orderId, $auth->id, null, (string) $order['status'], $note);
+            $this->audit->record($auth, 'order.note_added', 'order', $orderId, $request, ['note' => $note]);
+
+            return $this->present($this->orders->findById($orderId) ?? $order);
+        });
+    }
+
+    /**
+     * Administrators may advance or correct any item's fulfilment status.
+     *
+     * @param array<string,mixed> $data
+     */
+    public function updateItemFulfillmentByAdmin(
+        AuthenticatedUser $auth,
+        int $orderId,
+        int $itemId,
+        array $data,
+        Request $request,
+    ): array {
+        return $this->db->transaction(function () use ($auth, $orderId, $itemId, $data, $request): array {
+            $order = $this->orders->lockById($orderId);
+            if ($order === null) {
+                throw new NotFoundException('The requested order does not exist.');
+            }
+
+            $item = $this->orders->itemById($itemId);
+            if ($item === null || (int) $item['order_id'] !== $orderId) {
+                throw new NotFoundException('The requested order item does not exist.');
+            }
+
+            $target = (string) $data['status'];
+            $this->orders->setItemFulfillment($itemId, $target);
+            $this->synchroniseOrderFulfillment($orderId, $target);
+
+            $updated = $this->orders->findById($orderId) ?? $order;
+            $this->orders->addHistory(
+                $orderId,
+                $auth->id,
+                (string) $order['status'],
+                (string) $updated['status'],
+                $data['note'] ?? ('Item #' . $itemId . ' -> ' . $target),
+            );
+            $this->audit->record($auth, 'order.item_fulfillment_admin', 'order_item', $itemId, $request, [
+                'status' => $target,
+            ]);
+
+            return $this->present($updated);
+        });
+    }
+
     public function sellerId(AuthenticatedUser $auth): int
     {
         if ($auth->sellerId === null) {

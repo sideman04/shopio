@@ -118,6 +118,23 @@ final class ReviewService
         return Presenter::review($this->reviews->findById($reviewId) ?? [], true);
     }
 
+    public function replyAsAdmin(AuthenticatedUser $auth, int $reviewId, array $data, Request $request): array
+    {
+        if ($this->reviews->findById($reviewId) === null) {
+            throw new NotFoundException('The requested review does not exist.');
+        }
+
+        $this->reviews->adminReply($reviewId, (string) $data['reply']);
+        $this->audit->record($auth, 'review.admin_replied', 'review', $reviewId, $request);
+
+        $updated = $this->reviews->findById($reviewId);
+        if ($updated === null) {
+            throw new NotFoundException('The requested review does not exist.');
+        }
+
+        return Presenter::review($updated, true);
+    }
+
     private function requireSeller(AuthenticatedUser $auth): int
     {
         if ($auth->sellerId === null) {

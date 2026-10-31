@@ -14,6 +14,7 @@ use Shopio\Repositories\InventoryRepository;
 use Shopio\Repositories\OrderRepository;
 use Shopio\Repositories\PayoutRepository;
 use Shopio\Repositories\RoleRepository;
+use Shopio\Repositories\SellerDocumentRepository;
 use Shopio\Repositories\SellerRepository;
 use Shopio\Repositories\UserRepository;
 use Shopio\Support\Money;
@@ -33,6 +34,8 @@ final class SellerService
         private readonly OrderRepository $orders,
         private readonly InventoryRepository $inventory,
         private readonly PayoutRepository $payouts,
+        private readonly SellerDocumentRepository $documents,
+        private readonly UploadService $uploads,
         private readonly NotificationService $notifications,
         private readonly AuditService $audit,
     ) {
@@ -59,6 +62,111 @@ final class SellerService
         $this->audit->record($auth, 'seller.store_updated', 'seller', $sellerId, $request);
 
         return $this->store($auth);
+    }
+
+    /**
+     * @return list<array<string,mixed>>
+     */
+    public function documents(AuthenticatedUser $auth): array
+    {
+        $sellerId = $this->sellerId($auth);
+
+        return array_map(
+            [Presenter::class, 'sellerDocument'],
+            $this->documents->forSeller($sellerId),
+        );
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     * @param array<string,mixed>|null $file
+     * @return array<string,mixed>
+     */
+    public function addDocument(AuthenticatedUser $auth, array $data, ?array $file, Request $request): array
+    {
+        $sellerId = $this->sellerId($auth);
+
+        if ($this->documents->countForSeller($sellerId) >= 10) {
+            throw new ConflictException('You can upload up to 10 verification documents.');
+        }
+
+        $stored = $this->uploads->storeDocument($auth, $file, $request);
+
+        $documentId = $this->documents->create($sellerId, [
+            'document_type' => (string) $data['document_type'],
+            'label' => $data['label'] ?? null,
+            'file_url' => $stored['url'],
+            'file_path' => $stored['path'],
+            'original_name' => $stored['originalName'],
+            'mime_type' => $stored['mimeType'],
+            'size_bytes' => $stored['sizeBytes'],
+        ]);
+
+        $this->sellers->markVerificationPending($sellerId);
+        $this->audit->record($auth, 'seller.document_uploaded', 'seller_document', $documentId, $request, [
+            'document_type' => $data['document_type'],
+        ]);
+
+        $document = $this->documents->findByIdForSeller($documentId, $sellerId);
+
+        return Presenter::sellerDocument($document ?? []);
+    }
+
+    /**
+     * @return array{body:string,mime:string,size:int,filename:string}
+     */
+    public function downloadDocument(AuthenticatedUser $auth, int $documentId): array
+    {
+        $document = $this->documents->findByIdForSeller($documentId, $this->sellerId($auth));
+        if ($document === null) {
+            throw new NotFoundException('The requested document does not exist.');
+        }
+
+        return $this->uploads->readDocument((string) $document['file_path']);
+    }
+
+    public function removeDocument(AuthenticatedUser $auth, int $documentId, Request $request): void
+    {
+        $sellerId = $this->sellerId($auth);
+        $document = $this->documents->findByIdForSeller($documentId, $sellerId);
+
+        if ($document === null) {
+            throw new NotFoundException('The requested document does not exist.');
+        }
+
+        $this->documents->delete($documentId, $sellerId);
+        $this->uploads->deleteStored((string) $document['file_path']);
+        $this->audit->record($auth, 'seller.document_deleted', 'seller_document', $documentId, $request);
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function preferences(AuthenticatedUser $auth): array
+    {
+        $seller = $this->sellers->findByIdWithPrivate($this->sellerId($auth));
+        $preferences = $seller['preferences'] ?? null;
+
+        if (is_string($preferences)) {
+            $preferences = json_decode($preferences, true);
+        }
+
+        return is_array($preferences) ? $preferences : [];
+    }
+
+    /**
+     * @param array<string,mixed> $preferences
+     * @return array<string,mixed>
+     */
+    public function updatePreferences(AuthenticatedUser $auth, array $preferences, Request $request): array
+    {
+        $sellerId = $this->sellerId($auth);
+        $this->sellers->setPreferences($sellerId, $preferences);
+        $this->audit->record($auth, 'seller.preferences_updated', 'seller', $sellerId, $request, [
+            'keys' => array_keys($preferences),
+        ]);
+
+        return $this->preferences($auth);
     }
 
     /**

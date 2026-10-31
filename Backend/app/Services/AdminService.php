@@ -20,6 +20,7 @@ use Shopio\Repositories\ProductRepository;
 use Shopio\Repositories\RefundRepository;
 use Shopio\Repositories\ReviewRepository;
 use Shopio\Repositories\RoleRepository;
+use Shopio\Repositories\SellerDocumentRepository;
 use Shopio\Repositories\SellerRepository;
 use Shopio\Repositories\SettingsRepository;
 use Shopio\Repositories\SupportRepository;
@@ -39,6 +40,7 @@ final class AdminService
         private readonly Database $db,
         private readonly UserRepository $users,
         private readonly SellerRepository $sellers,
+        private readonly SellerDocumentRepository $sellerDocuments,
         private readonly ProductRepository $products,
         private readonly CategoryRepository $categories,
         private readonly CouponRepository $coupons,
@@ -335,12 +337,22 @@ final class AdminService
         }
 
         if (isset($data['verification_status'])) {
+            $verificationStatus = (string) $data['verification_status'];
             $this->sellers->updateVerification(
                 $sellerId,
-                (string) $data['verification_status'],
+                $verificationStatus,
                 $data['notes'] ?? null,
                 $auth->id,
             );
+
+            if (in_array($verificationStatus, ['approved', 'rejected'], true)) {
+                $this->sellerDocuments->reviewPendingForSeller(
+                    $sellerId,
+                    $verificationStatus,
+                    $data['notes'] ?? null,
+                    $auth->id,
+                );
+            }
         }
 
         if (isset($data['status'])) {
@@ -709,9 +721,11 @@ final class AdminService
      */
     public function updateSettings(AuthenticatedUser $auth, array $data, Request $request): array
     {
-        foreach ($data['settings'] as $key => $value) {
-            $this->settings->set((string) $key, $value, $auth->id);
-        }
+        $this->db->transaction(function () use ($auth, $data): void {
+            foreach ($data['settings'] as $key => $value) {
+                $this->settings->set((string) $key, $value, $auth->id);
+            }
+        });
 
         $this->audit->record($auth, 'admin.settings_updated', 'settings', null, $request, ['keys' => array_keys($data['settings'])]);
 

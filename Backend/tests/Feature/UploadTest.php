@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Shopio\Tests\Feature;
 
 use Shopio\Config\Config;
+use Shopio\Database\Database;
 use Shopio\Tests\Support\Factory;
+use Shopio\Tests\Support\TestApplication;
 use Shopio\Tests\TestCase;
 
 /**
@@ -142,6 +144,165 @@ final class UploadTest extends TestCase
         // Clean up the artefacts this test created.
         foreach (array_diff($this->listFiles($uploadDir), $before) as $created) {
             @unlink($created);
+        }
+    }
+
+    public function test_a_seller_can_upload_a_verification_document(): void
+    {
+        $this->startServer();
+
+        $seller = Factory::seller();
+        $db = TestApplication::make(Database::class);
+        $db->execute(
+            "UPDATE seller_profiles SET verification_status = 'not_submitted' WHERE id = :id",
+            ['id' => (int) $seller['id']],
+        );
+        $token = Factory::token((int) $seller['user']['id']);
+
+        $uploadDir = (string) Config::get('UPLOAD_DIR', 'storage/uploads');
+        $before = $this->listFiles($uploadDir);
+
+        $pdf = tempnam(sys_get_temp_dir(), 'shopio_pdf_');
+        $this->assertIsString($pdf);
+        file_put_contents($pdf, "%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n");
+
+        try {
+            $response = $this->curlMultipart(
+                '/api/v1/sellers/documents',
+                $token,
+                $pdf,
+                'business-licence.pdf',
+                [
+                    'document_type' => 'business_licence',
+                    'label' => '2026 business licence',
+                ],
+            );
+
+            $this->assertSame(201, $response['status'], 'Body: ' . $response['body']);
+            $payload = json_decode($response['body'], true);
+            $this->assertIsArray($payload);
+            $data = $payload['data'] ?? [];
+
+            $this->assertSame('business_licence', $data['documentType'] ?? null);
+            $this->assertSame('pending', $data['status'] ?? null);
+            $this->assertSame('2026 business licence', $data['label'] ?? null);
+            $this->assertStringStartsWith('/media/documents/', (string) ($data['fileUrl'] ?? ''));
+
+            $row = $db->selectOne(
+                'SELECT * FROM seller_documents WHERE id = :id',
+                ['id' => (int) ($data['id'] ?? 0)],
+            );
+            $this->assertNotNull($row);
+            $this->assertSame('application/pdf', $row['mime_type'] ?? null);
+            $this->assertSame((int) $seller['id'], (int) $row['seller_id']);
+
+            $stored = rtrim($uploadDir, '/') . '/' . (string) $row['file_path'];
+            $this->assertFileExists($stored);
+            $this->assertSame('application/pdf', (string) (new \finfo(FILEINFO_MIME_TYPE))->file($stored));
+
+            $verification = $db->scalar(
+                'SELECT verification_status FROM seller_profiles WHERE id = :id',
+                ['id' => (int) $seller['id']],
+            );
+            $this->assertSame('pending', $verification);
+        } finally {
+            @unlink($pdf);
+            foreach (array_diff($this->listFiles($uploadDir), $before) as $created) {
+                @unlink($created);
+            }
+        }
+    }
+
+    public function test_an_uploaded_image_is_served_through_the_media_route(): void
+    {
+        $this->startServer();
+
+        $user = Factory::user();
+        $token = Factory::token((int) $user['id']);
+        $uploadDir = (string) Config::get('UPLOAD_DIR', 'storage/uploads');
+        $before = $this->listFiles($uploadDir);
+
+        try {
+            $upload = $this->curlMultipart(
+                '/api/v1/uploads/images',
+                $token,
+                $this->tempPng(),
+                'photo.png',
+            );
+            $this->assertSame(201, $upload['status'], 'Body: ' . $upload['body']);
+            $payload = json_decode($upload['body'], true);
+            $url = (string) (($payload['data'] ?? [])['url'] ?? '');
+            $this->assertStringStartsWith('/media/images/', $url);
+
+            $media = $this->curlGet($url);
+            $this->assertSame(200, $media['status'], 'Body: ' . $media['body']);
+            $this->assertStringContainsString('image/png', $media['contentType']);
+            $this->assertSame("\x89PNG", substr($media['body'], 0, 4));
+        } finally {
+            foreach (array_diff($this->listFiles($uploadDir), $before) as $created) {
+                @unlink($created);
+            }
+        }
+    }
+
+    public function test_verification_documents_are_private_and_require_the_owner_or_admin(): void
+    {
+        $this->startServer();
+
+        $seller = Factory::seller();
+        $admin = Factory::admin();
+        $otherSeller = Factory::seller();
+        $sellerToken = Factory::token((int) $seller['user']['id']);
+        $otherToken = Factory::token((int) $otherSeller['user']['id']);
+        $adminToken = Factory::token((int) $admin['id']);
+        $uploadDir = (string) Config::get('UPLOAD_DIR', 'storage/uploads');
+        $before = $this->listFiles($uploadDir);
+
+        $pdf = tempnam(sys_get_temp_dir(), 'shopio_pdf_');
+        $this->assertIsString($pdf);
+        file_put_contents($pdf, "%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n");
+
+        try {
+            $upload = $this->curlMultipart(
+                '/api/v1/sellers/documents',
+                $sellerToken,
+                $pdf,
+                'business-licence.pdf',
+                ['document_type' => 'business_licence'],
+            );
+            $this->assertSame(201, $upload['status'], 'Body: ' . $upload['body']);
+            $payload = json_decode($upload['body'], true);
+            $data = $payload['data'] ?? [];
+            $documentId = (int) ($data['id'] ?? 0);
+            $publicUrl = (string) ($data['fileUrl'] ?? '');
+            $this->assertStringStartsWith('/media/documents/', $publicUrl);
+
+            // The public media route must never expose private documents.
+            $public = $this->curlGet($publicUrl);
+            $this->assertSame(404, $public['status'], 'Body: ' . $public['body']);
+
+            // The owner can stream the document.
+            $owner = $this->curlGet('/api/v1/sellers/documents/' . $documentId . '/file', $sellerToken);
+            $this->assertSame(200, $owner['status'], 'Body: ' . $owner['body']);
+            $this->assertStringContainsString('application/pdf', $owner['contentType']);
+            $this->assertStringStartsWith('%PDF-', $owner['body']);
+
+            // Another seller cannot.
+            $denied = $this->curlGet('/api/v1/sellers/documents/' . $documentId . '/file', $otherToken);
+            $this->assertSame(404, $denied['status'], 'Body: ' . $denied['body']);
+
+            // The admin review surface can stream the same document.
+            $adminView = $this->curlGet(
+                '/api/v1/admin/sellers/' . (int) $seller['id'] . '/documents/' . $documentId . '/file',
+                $adminToken,
+            );
+            $this->assertSame(200, $adminView['status'], 'Body: ' . $adminView['body']);
+            $this->assertStringStartsWith('%PDF-', $adminView['body']);
+        } finally {
+            @unlink($pdf);
+            foreach (array_diff($this->listFiles($uploadDir), $before) as $created) {
+                @unlink($created);
+            }
         }
     }
 
@@ -282,9 +443,9 @@ final class UploadTest extends TestCase
     }
 
     /**
-     * @return array{status:int,body:string}
+     * @return array{status:int,body:string,contentType:string}
      */
-    private function curlMultipart(string $path, string $token, string $filePath, string $filename): array
+    private function curlGet(string $path, ?string $token = null): array
     {
         $server = self::$server;
         if ($server === null) {
@@ -295,8 +456,46 @@ final class UploadTest extends TestCase
         $this->assertNotFalse($curl);
 
         curl_setopt_array($curl, [
+            CURLOPT_HTTPGET => true,
+            CURLOPT_HTTPHEADER => $token === null ? [] : ['Authorization: Bearer ' . $token],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 15,
+        ]);
+
+        $body = curl_exec($curl);
+        $status = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $contentType = (string) curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
+        curl_close($curl);
+
+        return [
+            'status' => $status,
+            'body' => is_string($body) ? $body : '',
+            'contentType' => $contentType,
+        ];
+    }
+
+    /**
+     * @param array<string,string> $fields
+     * @return array{status:int,body:string}
+     */
+    private function curlMultipart(
+        string $path,
+        string $token,
+        string $filePath,
+        string $filename,
+        array $fields = [],
+    ): array {
+        $server = self::$server;
+        if ($server === null) {
+            $this->fail('Server is not running.');
+        }
+
+        $curl = curl_init('http://127.0.0.1:' . $server['port'] . $path);
+        $this->assertNotFalse($curl);
+
+        curl_setopt_array($curl, [
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => ['file' => new \CURLFile($filePath, 'application/octet-stream', $filename)],
+            CURLOPT_POSTFIELDS => $fields + ['file' => new \CURLFile($filePath, 'application/octet-stream', $filename)],
             CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $token],
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 15,

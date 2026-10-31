@@ -200,6 +200,7 @@ final class Presenter
             'regionId' => ($row['region_id'] ?? null) !== null ? (int) $row['region_id'] : null,
             'cityId' => ($row['city_id'] ?? null) !== null ? (int) $row['city_id'] : null,
             'address' => $row['address'] ?? null,
+            'preferences' => self::jsonValue($row['preferences'] ?? null),
             'verificationStatus' => (string) $row['verification_status'],
             'commissionRate' => (string) $row['commission_rate'],
             'status' => (string) $row['status'],
@@ -480,6 +481,8 @@ final class Presenter
             'status' => (string) $row['status'],
             'sellerReply' => $row['seller_reply'] ?? null,
             'sellerRepliedAt' => $row['seller_replied_at'] ?? null,
+            'adminReply' => $row['admin_reply'] ?? null,
+            'adminRepliedAt' => $row['admin_replied_at'] ?? null,
             'customerName' => $row['customer_name'] ?? null,
             'createdAt' => $row['created_at'] ?? null,
         ];
@@ -660,5 +663,43 @@ final class Presenter
             'paidAt' => $row['paid_at'] ?? null,
             'createdAt' => $row['created_at'] ?? null,
         ];
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     * @return array<string,mixed>
+     */
+    public static function sellerDocument(array $row): array
+    {
+        return [
+            'id' => (int) $row['id'],
+            'sellerId' => (int) $row['seller_id'],
+            'documentType' => (string) $row['document_type'],
+            'label' => $row['label'] ?? null,
+            'fileUrl' => (string) $row['file_url'],
+            'originalName' => $row['original_name'] ?? null,
+            'mimeType' => (string) $row['mime_type'],
+            'sizeBytes' => (int) ($row['size_bytes'] ?? 0),
+            'status' => (string) $row['status'],
+            'reviewNotes' => $row['review_notes'] ?? null,
+            'reviewedByName' => $row['reviewed_by_name'] ?? null,
+            'reviewedAt' => $row['reviewed_at'] ?? null,
+            'createdAt' => $row['created_at'] ?? null,
+        ];
+    }
+
+    private static function jsonValue(mixed $value): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+
+            return $decoded === null ? $value : $decoded;
+        }
+
+        return $value;
     }
 }

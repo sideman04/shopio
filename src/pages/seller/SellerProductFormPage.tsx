@@ -23,6 +23,7 @@ import {
   CardTitle,
   Checkbox,
   EmptyState,
+  FileDropzone,
   Input,
   Modal,
   PageHeader,
@@ -40,6 +41,7 @@ import {
 } from '@/context'
 import { toast } from '@/context/uiStore'
 import { sellerService } from '@/services'
+import { uploadImage } from '@/services/uploadService'
 import { PHOTOS, imgCard } from '@/content/images'
 import type { ConditionType, Product, ProductStatus } from '@/types'
 import { cn, discountPercent, formatCurrency, slugify } from '@/lib/utils'
@@ -520,6 +522,17 @@ export default function SellerProductFormPage() {
               </Badge>
             </CardHeader>
             <CardBody className="space-y-5">
+              <FileDropzone
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                label="Upload product photos from your device"
+                hint="JPG, PNG or WebP · up to 5 MB each"
+                onFiles={async (files) => {
+                  const uploaded = await Promise.all(files.map((file) => uploadImage(file)))
+                  setImages((prev) => [...prev, ...uploaded.map((image) => image.url)])
+                }}
+              />
+
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   className="flex-1"

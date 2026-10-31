@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FolderTree, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
+import { FolderTree, Pencil, Plus, Trash2 } from 'lucide-react'
 import {
   Badge,
   Button,
   ConfirmDialog,
-  Dropdown,
   EmptyState,
+  ImageUpload,
   Input,
   Modal,
   PageHeader,
@@ -20,7 +20,9 @@ import {
   Table,
   Textarea,
 } from '@/components/ui'
+import { RowActions } from '@/components/tables/RowActions'
 import { adminService } from '@/services'
+import { errorMessage } from '@/services/apiClient'
 import { useCatalogStore, useCategoryCounts } from '@/context/catalogStore'
 import { toast } from '@/context/uiStore'
 import { PHOTOS, imgSquare } from '@/content/images'
@@ -64,7 +66,9 @@ export default function AdminCategoriesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null)
 
   useEffect(() => {
-    void adminService.fetchCategories().catch(() => undefined)
+    void adminService
+      .fetchCategories()
+      .catch((error) => toast.error('Could not load categories', errorMessage(error)))
   }, [])
 
   const sorted = useMemo(() => [...categories].sort((a, b) => a.sortOrder - b.sortOrder), [categories])
@@ -148,6 +152,8 @@ export default function AdminCategoriesPage() {
         toast.success('Category updated', `${name} saved.`)
       }
       closeForm()
+    } catch (error) {
+      toast.error(isAdd ? 'Category not created' : 'Category not updated', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -172,6 +178,8 @@ export default function AdminCategoriesPage() {
       await adminService.deleteCategory(deleteTarget.id)
       toast.success('Category deleted', `${deleteTarget.name} was removed from the catalogue.`)
       setDeleteTarget(null)
+    } catch (error) {
+      toast.error('Category not deleted', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -242,16 +250,17 @@ export default function AdminCategoriesPage() {
                     <Badge tone={category.status === 'active' ? 'success' : 'neutral'}>{category.status}</Badge>
                   </TD>
                   <TD className="text-right">
-                    <Dropdown
+                    <RowActions
                       label={`Actions for ${category.name}`}
-                      trigger={
-                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </span>
-                      }
                       items={[
                         { label: 'Edit', icon: <Pencil className="h-4 w-4" />, onClick: () => openEdit(category) },
-                        { label: 'Delete', icon: <Trash2 className="h-4 w-4" />, tone: 'danger', onClick: () => requestDelete(category) },
+                        {
+                          label: 'Delete',
+                          icon: <Trash2 className="h-4 w-4" />,
+                          tone: 'danger',
+                          divider: true,
+                          onClick: () => requestDelete(category),
+                        },
                       ]}
                     />
                   </TD>
@@ -308,8 +317,15 @@ export default function AdminCategoriesPage() {
             onChange={(e) => setDraft({ ...draft, description: e.target.value })}
             rows={3}
           />
+          <ImageUpload
+            label="Upload category image"
+            value={draft.imageUrl || null}
+            onChange={(url) => setDraft({ ...draft, imageUrl: url ?? '' })}
+            hint="Square JPG, PNG or WebP up to 5 MB"
+            previewClassName="aspect-square w-32"
+          />
           <Input
-            label="Image URL"
+            label="Or paste an image URL"
             value={draft.imageUrl}
             onChange={(e) => setDraft({ ...draft, imageUrl: e.target.value })}
             placeholder="https://…"

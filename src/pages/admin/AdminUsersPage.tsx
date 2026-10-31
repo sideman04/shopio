@@ -5,7 +5,6 @@ import {
   Download,
   Eye,
   KeyRound,
-  MoreHorizontal,
   Send,
   ShieldCheck,
   UserCog,
@@ -19,7 +18,6 @@ import {
   ConfirmDialog,
   DataList,
   Drawer,
-  Dropdown,
   EmptyState,
   Modal,
   PageHeader,
@@ -35,6 +33,7 @@ import {
   Table,
 } from '@/components/ui'
 import { DataToolbar } from '@/components/tables/DataToolbar'
+import { RowActions } from '@/components/tables/RowActions'
 import { adminService } from '@/services'
 import * as authService from '@/services/authService'
 import { errorMessage } from '@/services/apiClient'
@@ -94,6 +93,7 @@ export default function AdminUsersPage() {
   const [roleDraft, setRoleDraft] = useState<RoleCode[]>([])
   const [confirm, setConfirm] = useState<{ ids: number[]; status: UserStatus; title: string; description: string } | null>(null)
   const [busy, setBusy] = useState(false)
+  const [roleBusy, setRoleBusy] = useState(false)
 
   useEffect(() => {
     setPage(1)
@@ -169,12 +169,15 @@ export default function AdminUsersPage() {
       toast.error('Select at least one role', 'Every account needs a role.')
       return
     }
+    setRoleBusy(true)
     try {
       await adminService.setUserRoles(roleUser.id, roleDraft)
       toast.success('Roles updated', `${roleUser.fullName} now has ${roleDraft.map((r) => ROLE_LABELS[r]).join(', ')}.`)
       setRoleUser(null)
     } catch (error) {
       toast.error('Could not update roles', errorMessage(error))
+    } finally {
+      setRoleBusy(false)
     }
   }
 
@@ -362,13 +365,8 @@ export default function AdminUsersPage() {
                     <TD className="whitespace-nowrap">{formatDate(user.createdAt)}</TD>
                     <TD className="whitespace-nowrap">{user.lastLoginAt ? relativeTime(user.lastLoginAt) : 'Never'}</TD>
                     <TD className="text-right">
-                      <Dropdown
+                      <RowActions
                         label={`Actions for ${user.fullName}`}
-                        trigger={
-                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </span>
-                        }
                         items={[
                           { label: 'View profile', icon: <Eye className="h-4 w-4" />, onClick: () => setViewUser(user) },
                           { label: 'Change role', icon: <UserCog className="h-4 w-4" />, onClick: () => openRoles(user) },
@@ -502,10 +500,12 @@ export default function AdminUsersPage() {
         description={roleUser ? `Assign roles for ${roleUser.fullName}.` : undefined}
         footer={
           <>
-            <Button variant="outline" onClick={() => setRoleUser(null)}>
+            <Button variant="outline" onClick={() => setRoleUser(null)} disabled={roleBusy}>
               Cancel
             </Button>
-            <Button onClick={saveRoles}>Save roles</Button>
+            <Button onClick={saveRoles} loading={roleBusy}>
+              Save roles
+            </Button>
           </>
         }
       >

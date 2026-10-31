@@ -1,10 +1,10 @@
-import type { Order, OrderItem, Paginated, Product, Seller, SellerPayout } from '@/types'
+import type { Order, OrderItem, Paginated, Product, Seller, SellerDocument, SellerDocumentType, SellerPayout } from '@/types'
 import { useAuthStore } from '@/context/authStore'
 import { useCatalogStore, type ProductFormValues } from '@/context/catalogStore'
 import { useOrderStore } from '@/context/orderStore'
 import { usePeopleStore } from '@/context/peopleStore'
 import { api, API_BASE_URL } from './apiClient'
-import { mapOrder, mapPayout, mapProduct, mapSeller, num, paginate } from './mappers'
+import { mapOrder, mapPayout, mapProduct, mapSeller, mapSellerDocument, num, paginate } from './mappers'
 
 /**
  * Seller service — `/sellers` and `/sellers/products`.
@@ -72,6 +72,51 @@ export async function registerSeller(input: {
   const seller = mapSeller(response.data)
   usePeopleStore.getState().upsertSeller(seller)
   return seller
+}
+
+/* ----------------------------- Verification docs --------------------------- */
+
+function withAbsoluteDocumentUrl(document: SellerDocument): SellerDocument {
+  // Documents are private: link to the authenticated streaming endpoint rather
+  // than exposing the storage path as public media.
+  return {
+    ...document,
+    fileUrl: absoluteMediaUrl(`${API_BASE_URL}/sellers/documents/${document.id}/file`),
+  }
+}
+
+export async function fetchDocuments(): Promise<SellerDocument[]> {
+  const response = await api.get<Record<string, unknown>[]>('/sellers/documents')
+  return (response.data ?? []).map((row) => withAbsoluteDocumentUrl(mapSellerDocument(row)))
+}
+
+export async function uploadDocument(input: {
+  file: File
+  documentType: SellerDocumentType
+  label?: string
+}): Promise<SellerDocument> {
+  const form = new FormData()
+  form.append('file', input.file)
+  form.append('document_type', input.documentType)
+  if (input.label) form.append('label', input.label)
+  const response = await api.upload<Record<string, unknown>>('/sellers/documents', form)
+  return withAbsoluteDocumentUrl(mapSellerDocument(response.data))
+}
+
+export async function deleteDocument(documentId: number): Promise<void> {
+  await api.delete<null>(`/sellers/documents/${documentId}`)
+}
+
+/* ------------------------------ Preferences ------------------------------- */
+
+export async function fetchPreferences(): Promise<Record<string, unknown>> {
+  const response = await api.get<Record<string, unknown>>('/sellers/preferences')
+  return response.data ?? {}
+}
+
+export async function updatePreferences(preferences: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const response = await api.patch<Record<string, unknown>>('/sellers/preferences', { preferences })
+  return response.data ?? {}
 }
 
 /* --------------------------------- Products ------------------------------- */

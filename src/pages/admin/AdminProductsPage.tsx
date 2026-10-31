@@ -3,7 +3,6 @@ import {
   Archive,
   Check,
   Download,
-  MoreHorizontal,
   Package,
   Pencil,
   X,
@@ -13,7 +12,6 @@ import {
   Button,
   Checkbox,
   ConfirmDialog,
-  Dropdown,
   EmptyState,
   Input,
   Modal,
@@ -34,7 +32,9 @@ import {
   Textarea,
 } from '@/components/ui'
 import { DataToolbar } from '@/components/tables/DataToolbar'
+import { RowActions } from '@/components/tables/RowActions'
 import { adminService } from '@/services'
+import { errorMessage } from '@/services/apiClient'
 import { useCatalogStore } from '@/context/catalogStore'
 import { usePeopleStore } from '@/context/peopleStore'
 import { toast } from '@/context/uiStore'
@@ -116,7 +116,12 @@ export default function AdminProductsPage() {
       adminService.fetchProducts({ pageSize: 100 }),
       adminService.fetchSellers({ pageSize: 100 }),
       adminService.fetchCategories(),
-    ])
+    ]).then((results) => {
+      const failed = results.find((result) => result.status === 'rejected')
+      if (failed?.status === 'rejected') {
+        toast.error('Could not load catalogue data', errorMessage(failed.reason))
+      }
+    })
   }, [])
 
   const counts = useMemo(
@@ -262,16 +267,8 @@ export default function AdminProductsPage() {
     try {
       await adminService.moderateProduct(product.id, 'active')
       toast.success('Product is active', `${product.name} is visible in the storefront.`)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const archive = async (product: Product) => {
-    setBusy(true)
-    try {
-      await adminService.moderateProduct(product.id, 'archived')
-      toast.success('Product archived', `${product.name} was moved out of the active catalogue.`)
+    } catch (error) {
+      toast.error('Could not update product', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -284,6 +281,8 @@ export default function AdminProductsPage() {
       toast.success('Product archived', `${product.name} was removed from the active catalogue.`)
       setDeleteTarget(null)
       setSelected((current) => current.filter((id) => id !== product.id))
+    } catch (error) {
+      toast.error('Could not archive product', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -302,6 +301,8 @@ export default function AdminProductsPage() {
       }
       setBulk(null)
       setSelected([])
+    } catch (error) {
+      toast.error('Could not update products', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -403,9 +404,6 @@ export default function AdminProductsPage() {
               <Button size="sm" onClick={() => setBulk({ ids: selected, action: 'approve' })}>
                 Approve
               </Button>
-              <Button size="sm" variant="outline" onClick={() => setBulk({ ids: selected, action: 'archive' })}>
-                Archive
-              </Button>
               <Button size="sm" variant="danger" onClick={() => setBulk({ ids: selected, action: 'archive' })}>
                 Archive
               </Button>
@@ -493,21 +491,19 @@ export default function AdminProductsPage() {
                       </TD>
                       <TD>{formatNumber(product.soldCount)}</TD>
                       <TD className="text-right">
-                        <Dropdown
+                        <RowActions
                           label={`Actions for ${product.name}`}
-                          trigger={
-                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </span>
-                          }
                           items={[
                             ...(product.status === 'pending_review'
-                              ? [{ label: 'Review', icon: <Check className="h-4 w-4" />, onClick: () => openReview(product) }]
+                              ? [{ label: 'Review', icon: <Check className="h-4 w-4" />, disabled: busy, onClick: () => openReview(product) }]
                               : []),
-                            { label: 'Edit', icon: <Pencil className="h-4 w-4" />, onClick: () => openEdit(product) },
-                            { label: 'Set active', icon: <Check className="h-4 w-4" />, divider: true, onClick: () => setActive(product) },
-                            { label: 'Archive', icon: <Archive className="h-4 w-4" />, onClick: () => archive(product) },
-                            { label: 'Archive', icon: <Archive className="h-4 w-4" />, tone: 'danger', onClick: () => setDeleteTarget(product) },
+                            { label: 'Edit', icon: <Pencil className="h-4 w-4" />, disabled: busy, onClick: () => openEdit(product) },
+                            ...(product.status !== 'active'
+                              ? [{ label: 'Set active', icon: <Check className="h-4 w-4" />, divider: true, disabled: busy, onClick: () => setActive(product) }]
+                              : []),
+                            ...(product.status !== 'archived'
+                              ? [{ label: 'Archive', icon: <Archive className="h-4 w-4" />, tone: 'danger' as const, divider: product.status === 'active', disabled: busy, onClick: () => setDeleteTarget(product) }]
+                              : []),
                           ]}
                         />
                       </TD>

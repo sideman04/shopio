@@ -40,6 +40,7 @@ final class ReviewRepository extends Repository
     }
 
     /**
+     * @phpstan-impure A read after a write must observe the updated row.
      * @return array<string,mixed>|null
      */
     public function findById(int $id): ?array
@@ -113,7 +114,7 @@ final class ReviewRepository extends Repository
 
         $rows = $this->db->select(
             "SELECT r.id, r.product_id, r.user_id, r.rating, r.title, r.review_text, r.status,
-                    r.seller_reply, r.seller_replied_at, r.created_at,
+                    r.seller_reply, r.seller_replied_at, r.admin_reply, r.admin_replied_at, r.created_at,
                     CONCAT(SUBSTRING(u.full_name, 1, 1), REPEAT('*', GREATEST(LENGTH(u.full_name) - 1, 1))) AS customer_name
              FROM product_reviews r
              JOIN users u ON u.id = r.user_id
@@ -261,6 +262,16 @@ final class ReviewRepository extends Repository
     {
         $statement = $this->db->execute(
             'UPDATE product_reviews SET seller_reply = :reply, seller_replied_at = UTC_TIMESTAMP() WHERE id = :id',
+            ['reply' => $reply, 'id' => $reviewId],
+        );
+
+        return $this->db->affectedRows($statement) > 0;
+    }
+
+    public function adminReply(int $reviewId, string $reply): bool
+    {
+        $statement = $this->db->execute(
+            'UPDATE product_reviews SET admin_reply = :reply, admin_replied_at = UTC_TIMESTAMP() WHERE id = :id',
             ['reply' => $reply, 'id' => $reviewId],
         );
 

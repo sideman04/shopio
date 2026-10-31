@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Check, Copy, Image as ImageIcon, MoreHorizontal, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Check, Copy, Image as ImageIcon, Pencil, Plus, Trash2, X } from 'lucide-react'
 import {
   Badge,
   Button,
   ConfirmDialog,
-  Dropdown,
   EmptyState,
+  ImageUpload,
   Input,
   Modal,
   PageHeader,
@@ -14,6 +14,7 @@ import {
   SmartImage,
   StatCard,
 } from '@/components/ui'
+import { RowActions } from '@/components/tables/RowActions'
 import { adminService } from '@/services'
 import { errorMessage } from '@/services/apiClient'
 import { useCatalogStore } from '@/context/catalogStore'
@@ -98,6 +99,7 @@ export default function AdminBannersPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Banner | null>(null)
   const [busy, setBusy] = useState(false)
+  const [actionBusy, setActionBusy] = useState<number | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Banner | null>(null)
 
   useEffect(() => {
@@ -110,8 +112,12 @@ export default function AdminBannersPage() {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<BannerForm>({ defaultValues: EMPTY_FORM })
+
+  const imageUrl = watch('imageUrl')
 
   const stats = useMemo(
     () => ({
@@ -172,6 +178,7 @@ export default function AdminBannersPage() {
   })
 
   const duplicate = async (banner: Banner) => {
+    setActionBusy(banner.id)
     try {
       await adminService.createBanner({
         title: `${banner.title} (copy)`,
@@ -188,16 +195,21 @@ export default function AdminBannersPage() {
       toast.success('Banner duplicated', 'Created as a draft so it is not published immediately.')
     } catch (error) {
       toast.error('Could not duplicate banner', errorMessage(error))
+    } finally {
+      setActionBusy(null)
     }
   }
 
   const toggleStatus = async (banner: Banner) => {
     const next: Banner['status'] = banner.status === 'active' ? 'inactive' : 'active'
+    setActionBusy(banner.id)
     try {
       await adminService.updateBanner(banner.id, { status: next })
       toast.success(next === 'active' ? 'Banner activated' : 'Banner deactivated', `${banner.title} is now ${next}.`)
     } catch (error) {
       toast.error('Could not update banner', errorMessage(error))
+    } finally {
+      setActionBusy(null)
     }
   }
 
@@ -281,22 +293,30 @@ export default function AdminBannersPage() {
                 </p>
                 <div className="flex items-center justify-between gap-2 border-t border-ink-100 pt-3">
                   <span className="truncate text-xs text-ink-500">{banner.targetUrl ?? 'No target'}</span>
-                  <Dropdown
+                  <RowActions
                     label={`Actions for ${banner.title}`}
-                    trigger={
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </span>
-                    }
                     items={[
                       { label: 'Edit', icon: <Pencil className="h-4 w-4" />, onClick: () => openEdit(banner) },
                       {
                         label: banner.status === 'active' ? 'Deactivate' : 'Activate',
                         icon: banner.status === 'active' ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />,
+                        disabled: actionBusy === banner.id,
                         onClick: () => toggleStatus(banner),
                       },
-                      { label: 'Duplicate', icon: <Copy className="h-4 w-4" />, onClick: () => duplicate(banner) },
-                      { label: 'Delete', icon: <Trash2 className="h-4 w-4" />, tone: 'danger', divider: true, onClick: () => setDeleteTarget(banner) },
+                      {
+                        label: 'Duplicate',
+                        icon: <Copy className="h-4 w-4" />,
+                        disabled: actionBusy === banner.id,
+                        onClick: () => duplicate(banner),
+                      },
+                      {
+                        label: 'Delete',
+                        icon: <Trash2 className="h-4 w-4" />,
+                        tone: 'danger',
+                        divider: true,
+                        disabled: actionBusy === banner.id,
+                        onClick: () => setDeleteTarget(banner),
+                      },
                     ]}
                   />
                 </div>
@@ -332,8 +352,15 @@ export default function AdminBannersPage() {
         <form className="space-y-4" onSubmit={onSubmit}>
           <Input label="Title" error={errors.title?.message} {...register('title', { required: 'Title is required' })} />
           <Input label="Subtitle" {...register('subtitle')} />
+          <ImageUpload
+            label="Upload banner image"
+            value={imageUrl || null}
+            onChange={(url) => setValue('imageUrl', url ?? '', { shouldDirty: true })}
+            hint="Wide JPG, PNG or WebP up to 5 MB"
+            previewClassName="aspect-[16/6] w-full"
+          />
           <Input
-            label="Image URL"
+            label="Or paste an image URL"
             placeholder="https://…"
             error={errors.imageUrl?.message}
             hint="Leave blank to render a sand placeholder."

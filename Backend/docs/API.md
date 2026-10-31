@@ -167,6 +167,15 @@ reviews (`GET /products/{id}/review-eligibility`, `POST /products/{id}/reviews`,
 MIME must be JPEG, PNG or WebP; the filename is generated server-side. Returns
 `{ url, path, mimeType, sizeBytes, width, height }`.
 
+`POST /uploads/documents` — same shape, accepts PDF/JPEG/PNG/WebP up to 10 MB.
+Seller verification documents use the seller-scoped endpoints below.
+
+`GET /media/{path}` streams public images (product, store, banner, category)
+from outside the document root. Verification documents are **not** public:
+`GET /sellers/documents/{id}/file` (owner) and
+`GET /admin/sellers/{id}/documents/{documentId}/file` (admin) stream them after
+authentication.
+
 ### Seller (role `seller`)
 
 Onboarding: `POST /sellers/register`. Workspace:
@@ -174,6 +183,8 @@ Onboarding: `POST /sellers/register`. Workspace:
 `/sellers/orders`, `/sellers/orders/{id}`, `PATCH /sellers/orders/{id}/items/{itemId}`,
 `/sellers/payouts/summary|payouts` (`POST /sellers/payouts` supports **Idempotency-Key**),
 `/sellers/reviews`, `POST /sellers/reviews/{id}/reply`.
+Verification documents: `GET|POST /sellers/documents`, `DELETE /sellers/documents/{id}`,
+`GET /sellers/documents/{id}/file`. Preferences: `GET|PATCH /sellers/preferences`.
 Catalogue & inventory: `/sellers/products` (CRUD + `submit`, images, variants,
 options), `/sellers/inventory` (+ `adjust`, `threshold`).
 

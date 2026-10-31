@@ -7,6 +7,7 @@ import type {
   ProductStatus,
   Refund,
   Seller,
+  SellerDocument,
   SellerPayout,
   SupportMessage,
   Transaction,
@@ -17,7 +18,8 @@ import type {
 import { useCatalogStore, type ProductFormValues } from '@/context/catalogStore'
 import { usePeopleStore } from '@/context/peopleStore'
 import { useSystemStore } from '@/context/systemStore'
-import { api } from './apiClient'
+import { api, API_BASE_URL } from './apiClient'
+import { absoluteMediaUrl } from './uploadService'
 import {
   mapActivity,
   mapBanner,
@@ -28,6 +30,7 @@ import {
   mapProduct,
   mapRefund,
   mapSeller,
+  mapSellerDocument,
   mapSupport,
   mapTransaction,
   mapUser,
@@ -205,6 +208,19 @@ export async function setSellerCommission(sellerId: number, commissionRate: numb
   const seller = mapSeller(response.data)
   usePeopleStore.getState().upsertSeller(seller)
   return seller
+}
+
+export async function fetchSellerDocuments(sellerId: number): Promise<SellerDocument[]> {
+  const response = await api.get<Record<string, unknown>[]>(`/admin/sellers/${sellerId}/documents`)
+  return (response.data ?? []).map((row) => {
+    const document = mapSellerDocument(row)
+    return {
+      ...document,
+      fileUrl: absoluteMediaUrl(
+        `${API_BASE_URL}/admin/sellers/${sellerId}/documents/${document.id}/file`,
+      ),
+    }
+  })
 }
 
 /* -------------------------------- Products -------------------------------- */

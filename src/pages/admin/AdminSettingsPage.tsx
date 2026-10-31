@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
-import { CreditCard, Mail, Save, Settings, Truck } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { CreditCard, Loader2, Mail, RefreshCw, Save, Settings, Truck } from 'lucide-react'
 import {
   Alert,
+  Badge,
   Button,
   Card,
   CardBody,
@@ -17,6 +18,7 @@ import {
 import { toast } from '@/context/uiStore'
 import { shippingCarriers } from '@/content/marketing'
 import { adminService, geoService } from '@/services'
+import { errorMessage } from '@/services/apiClient'
 import type { Country } from '@/types'
 
 interface SettingsState {
@@ -218,20 +220,33 @@ export default function AdminSettingsPage() {
   const [tab, setTab] = useState('general')
   const [settings, setSettings] = useState<SettingsState>(DEFAULTS)
   const [countries, setCountries] = useState<Country[]>([])
-  const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [savingSection, setSavingSection] = useState<string | null>(null)
+  const [dirtySections, setDirtySections] = useState<Set<keyof SettingsState>>(new Set())
+
+  const loadSettings = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      setSettings(hydrate(await adminService.fetchSettings()))
+      setDirtySections(new Set())
+    } catch (error) {
+      setLoadError(errorMessage(error, 'Please try again.'))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     void geoService.fetchCountries().then(setCountries).catch(() => setCountries([]))
-    void adminService
-      .fetchSettings()
-      .then((flat) => setSettings(hydrate(flat)))
-      .catch((error) =>
-        toast.error('Could not load settings', error instanceof Error ? error.message : 'Please try again.'),
-      )
-  }, [])
+    void loadSettings()
+  }, [loadSettings])
 
-  const update = <K extends keyof SettingsState>(section: K, patch: Partial<SettingsState[K]>) =>
+  const update = <K extends keyof SettingsState>(section: K, patch: Partial<SettingsState[K]>) => {
     setSettings((current) => ({ ...current, [section]: { ...current[section], ...patch } }))
+    setDirtySections((current) => new Set(current).add(section))
+  }
 
   const save = async (label: string, section?: keyof SettingsState) => {
     if ((!section || section === 'payments') && settings.payments.methods.length === 0) {
@@ -261,7 +276,7 @@ export default function AdminSettingsPage() {
         return
       }
     }
-    setSaving(true)
+    setSavingSection(section ?? 'all')
     try {
       const allValues = flatten(settings)
       const values = section
@@ -269,24 +284,41 @@ export default function AdminSettingsPage() {
         : allValues
       const flat = await adminService.updateSettings(values)
       const savedSettings = hydrate(flat)
-      if (!section) setSettings(savedSettings)
+
+      if (section) {
+        // Rehydrate only the section that was saved. Other sections may still
+        // contain unsaved edits, which must not be discarded.
+        setSettings((current) => ({ ...current, [section]: savedSettings[section] }))
+        setDirtySections((current) => {
+          const next = new Set(current)
+          next.delete(section)
+          return next
+        })
+      } else {
+        setSettings(savedSettings)
+        setDirtySections(new Set())
+      }
+
       toast.success(`${label} settings saved`, 'The configuration was stored on the server.')
     } catch (error) {
-      toast.error('Settings not saved', error instanceof Error ? error.message : 'Please try again.')
+      toast.error('Settings not saved', errorMessage(error, 'Please try again.'))
     } finally {
-      setSaving(false)
+      setSavingSection(null)
     }
   }
 
   const reloadSettings = async () => {
-    setSaving(true)
+    setSavingSection('reload')
+    setLoadError(null)
     try {
       setSettings(hydrate(await adminService.fetchSettings()))
+      setDirtySections(new Set())
       toast.success('Settings reloaded', 'The latest saved configuration is now shown.')
     } catch (error) {
-      toast.error('Could not reload settings', error instanceof Error ? error.message : 'Please try again.')
+      setLoadError(errorMessage(error))
+      toast.error('Could not reload settings', errorMessage(error, 'Please try again.'))
     } finally {
-      setSaving(false)
+      setSavingSection(null)
     }
   }
 
@@ -353,7 +385,11 @@ export default function AdminSettingsPage() {
           />
         </div>
         <div className="flex justify-end">
-          <Button onClick={() => save('General', 'general')} loading={saving}>
+          <Button
+            onClick={() => save('General', 'general')}
+            loading={savingSection === 'general'}
+            disabled={savingSection !== null}
+          >
             <Save className="h-4 w-4" />
             Save general
           </Button>
@@ -411,7 +447,11 @@ export default function AdminSettingsPage() {
           />
         </div>
         <div className="flex justify-end">
-          <Button onClick={() => save('Commerce', 'commerce')} loading={saving}>
+          <Button
+            onClick={() => save('Commerce', 'commerce')}
+            loading={savingSection === 'commerce'}
+            disabled={savingSection !== null}
+          >
             <Save className="h-4 w-4" />
             Save commerce
           </Button>
@@ -467,7 +507,11 @@ export default function AdminSettingsPage() {
           />
         </div>
         <div className="flex justify-end">
-          <Button onClick={() => save('Shipping and tax', 'shipping')} loading={saving}>
+          <Button
+            onClick={() => save('Shipping and tax', 'shipping')}
+            loading={savingSection === 'shipping'}
+            disabled={savingSection !== null}
+          >
             <Truck className="h-4 w-4" />
             Save shipping
           </Button>
@@ -507,7 +551,11 @@ export default function AdminSettingsPage() {
           />
         </div>
         <div className="flex justify-end">
-          <Button onClick={() => save('Emails', 'emails')} loading={saving}>
+          <Button
+            onClick={() => save('Emails', 'emails')}
+            loading={savingSection === 'emails'}
+            disabled={savingSection !== null}
+          >
             <Mail className="h-4 w-4" />
             Save emails
           </Button>
@@ -554,7 +602,11 @@ export default function AdminSettingsPage() {
           ]}
         />
         <div className="flex justify-end">
-          <Button onClick={() => save('Payments', 'payments')} loading={saving}>
+          <Button
+            onClick={() => save('Payments', 'payments')}
+            loading={savingSection === 'payments'}
+            disabled={savingSection !== null}
+          >
             <CreditCard className="h-4 w-4" />
             Save payments
           </Button>
@@ -576,7 +628,11 @@ export default function AdminSettingsPage() {
           description="Flag the storefront as read-only. Enforcing it is a deployment concern; the setting is recorded so operational tooling can act on it."
         />
         <div className="flex justify-end border-t border-ink-100 pt-4">
-          <Button onClick={() => save('Maintenance', 'maintenance')} loading={saving}>
+          <Button
+            onClick={() => save('Maintenance', 'maintenance')}
+            loading={savingSection === 'maintenance'}
+            disabled={savingSection !== null}
+          >
             <Save className="h-4 w-4" />
             Save maintenance
           </Button>
@@ -591,9 +647,22 @@ export default function AdminSettingsPage() {
         title="Platform settings"
         description="Marketplace-wide configuration for commerce, shipping, email and payments."
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={reloadSettings} loading={saving}>Reload saved</Button>
-            <Button onClick={() => save('Platform')} loading={saving}>
+          <div className="flex flex-wrap items-center gap-2">
+            {dirtySections.size > 0 && <Badge tone="warning">Unsaved changes</Badge>}
+            <Button
+              variant="outline"
+              onClick={() => void reloadSettings()}
+              loading={savingSection === 'reload'}
+              disabled={savingSection !== null}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reload saved
+            </Button>
+            <Button
+              onClick={() => save('Platform')}
+              loading={savingSection === 'all'}
+              disabled={savingSection !== null}
+            >
               <Save className="h-4 w-4" />
               Save changes
             </Button>
@@ -601,26 +670,46 @@ export default function AdminSettingsPage() {
         }
       />
 
-      <Tabs
-        value={tab}
-        onChange={setTab}
-        items={[
-          { id: 'general', label: 'General' },
-          { id: 'commerce', label: 'Commerce' },
-          { id: 'shipping', label: 'Shipping & tax' },
-          { id: 'emails', label: 'Emails' },
-          { id: 'payments', label: 'Payments' },
-          { id: 'maintenance', label: 'Maintenance' },
-        ]}
-        panels={{
-          general: generalPanel,
-          commerce: commercePanel,
-          shipping: shippingPanel,
-          emails: emailsPanel,
-          payments: paymentsPanel,
-          maintenance: maintenancePanel,
-        }}
-      />
+      {loadError && (
+        <Alert tone="danger" title="Could not load settings">
+          <div className="flex flex-wrap items-center gap-3">
+            <span>{loadError}</span>
+            <Button variant="outline" size="sm" onClick={() => void loadSettings()}>
+              Retry
+            </Button>
+          </div>
+        </Alert>
+      )}
+
+      {loading ? (
+        <Card>
+          <CardBody className="flex items-center gap-2 py-10 text-sm text-ink-500">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            Loading platform settings…
+          </CardBody>
+        </Card>
+      ) : (
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          items={[
+            { id: 'general', label: 'General' },
+            { id: 'commerce', label: 'Commerce' },
+            { id: 'shipping', label: 'Shipping & tax' },
+            { id: 'emails', label: 'Emails' },
+            { id: 'payments', label: 'Payments' },
+            { id: 'maintenance', label: 'Maintenance' },
+          ]}
+          panels={{
+            general: generalPanel,
+            commerce: commercePanel,
+            shipping: shippingPanel,
+            emails: emailsPanel,
+            payments: paymentsPanel,
+            maintenance: maintenancePanel,
+          }}
+        />
+      )}
 
       <p className="flex items-center gap-1.5 text-xs text-ink-500">
         <Settings className="h-3.5 w-3.5" aria-hidden="true" />

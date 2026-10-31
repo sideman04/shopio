@@ -34,7 +34,7 @@ final class SellerRepository extends Repository
     public function findByIdWithPrivate(int $id): ?array
     {
         return $this->db->selectOne(
-            'SELECT ' . self::PUBLIC_COLUMNS . ', s.verification_notes, s.verified_by, s.verified_at
+            'SELECT ' . self::PUBLIC_COLUMNS . ', s.preferences, s.verification_notes, s.verified_by, s.verified_at
              FROM seller_profiles s WHERE s.id = :id LIMIT 1',
             ['id' => $id],
         );
@@ -46,7 +46,7 @@ final class SellerRepository extends Repository
     public function findByUserId(int $userId): ?array
     {
         return $this->db->selectOne(
-            'SELECT ' . self::PUBLIC_COLUMNS . ', s.verification_notes, s.verified_by, s.verified_at
+            'SELECT ' . self::PUBLIC_COLUMNS . ', s.preferences, s.verification_notes, s.verified_by, s.verified_at
              FROM seller_profiles s WHERE s.user_id = :user_id LIMIT 1',
             ['user_id' => $userId],
         );
@@ -132,6 +132,31 @@ final class SellerRepository extends Repository
         }
 
         $this->db->execute('UPDATE seller_profiles SET ' . implode(', ', $sets) . ' WHERE id = :id', $params);
+    }
+
+    /**
+     * @param array<string,mixed> $preferences
+     */
+    public function setPreferences(int $sellerId, array $preferences): void
+    {
+        $this->db->execute(
+            'UPDATE seller_profiles SET preferences = :preferences WHERE id = :id',
+            ['preferences' => json_encode($preferences, JSON_THROW_ON_ERROR), 'id' => $sellerId],
+        );
+    }
+
+    /**
+     * Moves a store into the review queue when documents are uploaded. An
+     * already-approved store keeps its verified status.
+     */
+    public function markVerificationPending(int $sellerId): void
+    {
+        $this->db->execute(
+            "UPDATE seller_profiles
+             SET verification_status = 'pending', verification_notes = NULL
+             WHERE id = :id AND verification_status IN ('not_submitted', 'rejected')",
+            ['id' => $sellerId],
+        );
     }
 
     public function updateVerification(int $sellerId, string $status, ?string $notes, int $verifiedBy): void

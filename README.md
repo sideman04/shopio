@@ -206,9 +206,10 @@ Set the API base URL in `.env`:
 VITE_API_BASE_URL=/api/v1
 ```
 
-Vite proxies `/api` to `http://127.0.0.1:8000` in development and preview, so requests are
-same-origin. For a deployed build, either point `VITE_API_BASE_URL` at the public API URL or
-reverse-proxy `/api` to the PHP backend.
+Vite proxies `/api` and `/media` to `http://127.0.0.1:8000` in development and preview, so
+requests and uploaded images are same-origin. For a deployed build, either point
+`VITE_API_BASE_URL` at the public API URL or reverse-proxy `/api` and `/media` to the PHP
+backend.
 
 The client sends session cookies, attaches the CSRF token for mutating requests and normalises API
 errors. No secrets or credentials are stored in the frontend.

@@ -23,4 +23,11 @@ final class UploadController extends Controller
 
         return $this->created($result, 'File uploaded successfully', [], $request);
     }
+
+    public function document(Request $request): Response
+    {
+        $result = $this->uploads->storeDocument($this->auth($request), $request->file('file'), $request);
+
+        return $this->created($result, 'Document uploaded successfully', [], $request);
+    }
 }

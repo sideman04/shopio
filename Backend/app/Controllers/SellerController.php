@@ -50,6 +50,71 @@ final class SellerController extends Controller
         return $this->success($store, 'Store updated successfully', 200, [], $request);
     }
 
+    public function documents(Request $request): Response
+    {
+        return $this->success(
+            $this->sellers->documents($this->seller($request)),
+            'Documents retrieved successfully',
+            200,
+            [],
+            $request,
+        );
+    }
+
+    public function uploadDocument(Request $request): Response
+    {
+        $data = SellerValidator::documentUpload($request->body());
+        $document = $this->sellers->addDocument(
+            $this->seller($request),
+            $data,
+            $request->file('file'),
+            $request,
+        );
+
+        return $this->created($document, 'Document uploaded successfully', [], $request);
+    }
+
+    /**
+     * @param array<string,string> $params
+     */
+    public function deleteDocument(Request $request, array $params): Response
+    {
+        $this->sellers->removeDocument($this->seller($request), $this->intParam($params, 'id'), $request);
+
+        return $this->success(null, 'Document deleted successfully', 200, [], $request);
+    }
+
+    /**
+     * @param array<string,string> $params
+     */
+    public function downloadDocument(Request $request, array $params): Response
+    {
+        $file = $this->sellers->downloadDocument($this->seller($request), $this->intParam($params, 'id'));
+
+        return $this->file($file['body'], $file['mime'], $file['filename'], true, [
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ]);
+    }
+
+    public function preferences(Request $request): Response
+    {
+        return $this->success(
+            $this->sellers->preferences($this->seller($request)),
+            'Preferences retrieved successfully',
+            200,
+            [],
+            $request,
+        );
+    }
+
+    public function updatePreferences(Request $request): Response
+    {
+        $data = SellerValidator::preferences($request->body());
+        $preferences = $this->sellers->updatePreferences($this->seller($request), $data['preferences'], $request);
+
+        return $this->success($preferences, 'Preferences updated successfully', 200, [], $request);
+    }
+
     public function dashboard(Request $request): Response
     {
         return $this->success($this->sellers->dashboard($this->seller($request)), 'Dashboard retrieved successfully', 200, [], $request);

@@ -8,11 +8,15 @@ use Shopio\Auth\AuthenticatedUser;
 use Shopio\Http\Request;
 use Shopio\Http\Response;
 use Shopio\Policies\AdminPolicy;
+use Shopio\Repositories\SellerDocumentRepository;
 use Shopio\Services\AdminService;
 use Shopio\Services\OrderService;
 use Shopio\Services\PayoutService;
 use Shopio\Services\RefundService;
+use Shopio\Services\ReviewService;
 use Shopio\Services\SupportService;
+use Shopio\Services\UploadService;
+use Shopio\Support\Presenter;
 use Shopio\Validators\AdminValidator;
 
 /**
@@ -28,6 +32,9 @@ final class AdminController extends Controller
         private readonly RefundService $refunds,
         private readonly PayoutService $payouts,
         private readonly SupportService $support,
+        private readonly ReviewService $reviews,
+        private readonly SellerDocumentRepository $sellerDocuments,
+        private readonly UploadService $uploads,
     ) {
     }
 
@@ -82,12 +89,47 @@ final class AdminController extends Controller
     /**
      * @param array<string,string> $params
      */
+    public function downloadSellerDocument(Request $request, array $params): Response
+    {
+        $sellerId = $this->intParam($params, 'id');
+        $documentId = $this->intParam($params, 'documentId');
+        $document = $this->sellerDocuments->findByIdForSeller($documentId, $sellerId);
+        if ($document === null) {
+            throw new \Shopio\Exceptions\NotFoundException('The requested document does not exist.');
+        }
+
+        $file = $this->uploads->readDocument((string) $document['file_path']);
+
+        return $this->file($file['body'], $file['mime'], $file['filename'], true, [
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ]);
+    }
+
+    /**
+     * @param array<string,string> $params
+     */
     public function verifySeller(Request $request, array $params): Response
     {
         $data = AdminValidator::sellerVerification($request->body());
         $seller = $this->admin->verifySeller($this->admin($request), $this->intParam($params, 'id'), $data, $request);
 
         return $this->success($seller, 'Seller updated successfully', 200, [], $request);
+    }
+
+    /**
+     * @param array<string,string> $params
+     */
+    public function sellerDocuments(Request $request, array $params): Response
+    {
+        $documents = $this->sellerDocuments->forSeller($this->intParam($params, 'id'));
+
+        return $this->success(
+            array_map([Presenter::class, 'sellerDocument'], $documents),
+            'Seller documents retrieved successfully',
+            200,
+            [],
+            $request,
+        );
     }
 
     public function products(Request $request): Response
@@ -168,6 +210,45 @@ final class AdminController extends Controller
         return $this->success($order, 'Order status updated successfully', 200, [], $request);
     }
 
+    /**
+     * @param array<string,string> $params
+     */
+    public function addOrderNote(Request $request, array $params): Response
+    {
+        $data = AdminValidator::orderNote($request->body());
+        $order = $this->orders->addAdminNote($this->admin($request), $this->intParam($params, 'id'), $data, $request);
+
+        return $this->success($order, 'Note added successfully', 200, [], $request);
+    }
+
+    /**
+     * @param array<string,string> $params
+     */
+    public function fulfillOrderItem(Request $request, array $params): Response
+    {
+        $data = AdminValidator::orderItemFulfillment($request->body());
+        $order = $this->orders->updateItemFulfillmentByAdmin(
+            $this->admin($request),
+            $this->intParam($params, 'id'),
+            $this->intParam($params, 'itemId'),
+            $data,
+            $request,
+        );
+
+        return $this->success($order, 'Fulfilment updated successfully', 200, [], $request);
+    }
+
+    /**
+     * @param array<string,string> $params
+     */
+    public function createOrderRefund(Request $request, array $params): Response
+    {
+        $data = AdminValidator::refundCreate($request->body());
+        $refund = $this->refunds->requestByAdmin($this->admin($request), $this->intParam($params, 'id'), $data, $request);
+
+        return $this->created($refund, 'Refund request created successfully', [], $request);
+    }
+
     public function transactions(Request $request): Response
     {
         $result = $this->admin->payments($this->filters($request, ['status', 'provider', 'q']), $this->page($request), $this->perPage($request));
@@ -227,6 +308,17 @@ final class AdminController extends Controller
         $review = $this->admin->moderateReview($this->admin($request), $this->intParam($params, 'id'), $data, $request);
 
         return $this->success($review, 'Review moderated successfully', 200, [], $request);
+    }
+
+    /**
+     * @param array<string,string> $params
+     */
+    public function replyReview(Request $request, array $params): Response
+    {
+        $data = AdminValidator::reviewReply($request->body());
+        $review = $this->reviews->replyAsAdmin($this->admin($request), $this->intParam($params, 'id'), $data, $request);
+
+        return $this->success($review, 'Reply posted successfully', 200, [], $request);
     }
 
     public function reviewReports(Request $request): Response

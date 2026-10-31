@@ -4,7 +4,7 @@ import { useCartStore } from '@/context/cartStore'
 import { useCatalogStore } from '@/context/catalogStore'
 import { useOrderStore } from '@/context/orderStore'
 import { api } from './apiClient'
-import { mapOrder, paginate } from './mappers'
+import { mapOrder, mapRefund, paginate } from './mappers'
 
 /**
  * Order service — customer `/orders`, seller `/sellers/orders` and admin
@@ -241,8 +241,35 @@ export async function updateItemFulfillment(
     return order
   }
 
+  if (scope === 'admin') {
+    const response = await api.patch<Record<string, unknown>>(
+      `/admin/orders/${orderId}/items/${orderItemId}`,
+      { status },
+    )
+    const order = mapOrder(response.data)
+    useOrderStore.getState().upsertOrder(order)
+    return order
+  }
+
   useOrderStore.getState().updateItemFulfillment(orderId, orderItemId, status)
   return useOrderStore.getState().orders.find((order) => order.id === orderId)
+}
+
+/** Adds an internal, staff-only note to an order's history. */
+export async function addAdminNote(orderId: number, note: string) {
+  const response = await api.post<Record<string, unknown>>(`/admin/orders/${orderId}/notes`, { note })
+  const order = mapOrder(response.data)
+  useOrderStore.getState().upsertOrder(order)
+  return order
+}
+
+/** Creates an auditable refund request for an order (admin scope). */
+export async function createAdminRefund(orderId: number, amount: number | null, reason: string) {
+  const response = await api.post<Record<string, unknown>>(`/admin/orders/${orderId}/refunds`, {
+    amount,
+    reason,
+  })
+  return mapRefund(response.data)
 }
 
 /** Customer-initiated refund request. */

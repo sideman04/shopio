@@ -31,6 +31,7 @@ import type {
   Region,
   Review,
   Seller,
+  SellerDocument,
   SellerPayout,
   SupportMessage,
   Transaction,
@@ -160,6 +161,9 @@ export function mapSeller(row: Row): Seller {
     regionId: row.regionId != null || row.region_id != null ? num(row.regionId ?? row.region_id) : null,
     cityId: row.cityId != null || row.city_id != null ? num(row.cityId ?? row.city_id) : null,
     address: strOrNull(row.address),
+    preferences: row.preferences && typeof row.preferences === 'object'
+      ? (row.preferences as Record<string, unknown>)
+      : null,
     verificationStatus: (row.verificationStatus ?? row.verification_status ?? 'not_submitted') as Seller['verificationStatus'],
     verificationNotes: strOrNull(row.verificationNotes ?? row.verification_notes),
     commissionRate: num(row.commissionRate ?? row.commission_rate),
@@ -172,6 +176,24 @@ export function mapSeller(row: Row): Seller {
       ? num(row.productCount ?? row.product_count)
       : undefined,
     totalSales: row.totalSales !== undefined ? num(row.totalSales) : undefined,
+  }
+}
+
+export function mapSellerDocument(row: Row): SellerDocument {
+  return {
+    id: num(row.id),
+    sellerId: num(row.sellerId ?? row.seller_id),
+    documentType: (row.documentType ?? row.document_type ?? 'other') as SellerDocument['documentType'],
+    label: strOrNull(row.label),
+    fileUrl: str(row.fileUrl ?? row.file_url),
+    originalName: strOrNull(row.originalName ?? row.original_name),
+    mimeType: str(row.mimeType ?? row.mime_type),
+    sizeBytes: num(row.sizeBytes ?? row.size_bytes),
+    status: (row.status ?? 'pending') as SellerDocument['status'],
+    reviewNotes: strOrNull(row.reviewNotes ?? row.review_notes),
+    reviewedByName: strOrNull(row.reviewedByName ?? row.reviewed_by_name),
+    reviewedAt: strOrNull(row.reviewedAt ?? row.reviewed_at),
+    createdAt: str(row.createdAt ?? row.created_at),
   }
 }
 
@@ -320,6 +342,8 @@ export function mapReview(row: Row): Review {
     status: (row.status ?? 'published') as Review['status'],
     sellerReply: strOrNull(row.sellerReply ?? row.seller_reply),
     sellerRepliedAt: strOrNull(row.sellerRepliedAt ?? row.seller_replied_at),
+    adminReply: strOrNull(row.adminReply ?? row.admin_reply),
+    adminRepliedAt: strOrNull(row.adminRepliedAt ?? row.admin_replied_at),
     createdAt: str(row.createdAt ?? row.created_at),
     customerName: strOrNull(row.customerName ?? row.customer_name) ?? undefined,
     customerAvatar: strOrNull(row.customerAvatar ?? row.customer_avatar),

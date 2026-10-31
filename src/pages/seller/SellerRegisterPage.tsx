@@ -10,6 +10,7 @@ import {
   Percent,
   ShieldCheck,
   Store,
+  Trash2,
   UserRound,
 } from 'lucide-react'
 import {
@@ -17,7 +18,10 @@ import {
   Button,
   Card,
   CardBody,
+  CardHeader,
+  CardTitle,
   Checkbox,
+  FileDropzone,
   Input,
   Select,
   Textarea,
@@ -27,7 +31,23 @@ import { authService, geoService, sellerService } from '@/services'
 import { errorMessage } from '@/services/apiClient'
 import { toast, useAuthStore } from '@/context'
 import { cn, isEmail, slugify } from '@/lib/utils'
-import type { City, Region } from '@/types'
+import type { City, Region, SellerDocumentType } from '@/types'
+
+interface PendingDocument {
+  key: string
+  file: File
+  documentType: SellerDocumentType
+  label: string
+}
+
+const DOCUMENT_TYPES: Array<{ label: string; value: SellerDocumentType }> = [
+  { label: 'Business licence', value: 'business_licence' },
+  { label: 'Tax certificate (TIN)', value: 'tax_certificate' },
+  { label: 'National ID / passport', value: 'id_document' },
+  { label: 'Proof of address', value: 'address_proof' },
+  { label: 'Bank statement', value: 'bank_statement' },
+  { label: 'Other supporting document', value: 'other' },
+]
 
 interface RegisterFormValues {
   fullName: string
@@ -65,6 +85,9 @@ export default function SellerRegisterPage() {
   const [submitted, setSubmitted] = useState(false)
   const [regions, setRegions] = useState<Region[]>([])
   const [cities, setCities] = useState<City[]>([])
+  const [documents, setDocuments] = useState<PendingDocument[]>([])
+  const [documentType, setDocumentType] = useState<SellerDocumentType>('business_licence')
+  const [documentLabel, setDocumentLabel] = useState('')
 
   // Geography is reference data served by the API, not bundled with the app.
   useEffect(() => {
@@ -162,6 +185,36 @@ export default function SellerRegisterPage() {
       if (useAuthStore.getState().session) {
         await sellerService.updateSellerStore(storeInput).catch(() => undefined)
         await authService.me().catch(() => undefined)
+      }
+
+      if (documents.length > 0) {
+        if (useAuthStore.getState().session?.user.sellerId) {
+          const failed: string[] = []
+          for (const document of documents) {
+            try {
+              await sellerService.uploadDocument({
+                file: document.file,
+                documentType: document.documentType,
+                label: document.label || undefined,
+              })
+            } catch {
+              failed.push(document.file.name)
+            }
+          }
+          if (failed.length > 0) {
+            toast.error(
+              'Some documents were not uploaded',
+              `${failed.join(', ')} could not be uploaded. Add them from your seller store settings.`,
+            )
+          } else {
+            toast.success('Verification documents uploaded', 'Our team will review them with your application.')
+          }
+        } else {
+          toast.info(
+            'Verify your email, then upload documents',
+            'Sign in after verifying your email and upload them from your seller store settings.',
+          )
+        }
       }
 
       setSubmitted(true)
@@ -406,6 +459,78 @@ export default function SellerRegisterPage() {
 
             {step === 2 && (
               <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Verification documents</CardTitle>
+                  </CardHeader>
+                  <CardBody className="space-y-4">
+                    <p className="text-sm leading-relaxed text-ink-600">
+                      Upload a business licence, tax certificate, ID or other supporting document. Documents help
+                      our team verify your store faster. You can also add them later from your store settings.
+                    </p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Select
+                        label="Document type"
+                        value={documentType}
+                        onChange={(event) => setDocumentType(event.target.value as SellerDocumentType)}
+                        options={DOCUMENT_TYPES}
+                      />
+                      <Input
+                        label="Label (optional)"
+                        placeholder="e.g. 2026 business licence"
+                        value={documentLabel}
+                        onChange={(event) => setDocumentLabel(event.target.value)}
+                      />
+                    </div>
+                    <FileDropzone
+                      accept=".pdf,image/jpeg,image/png,image/webp"
+                      multiple
+                      label="Upload business documents"
+                      hint="PDF, JPG, PNG or WebP · up to 10 MB each"
+                      maxSize={10 * 1024 * 1024}
+                      onFiles={(files) => {
+                        setDocuments((current) => [
+                          ...current,
+                          ...files.map((file) => ({
+                            key: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2, 8)}`,
+                            file,
+                            documentType,
+                            label: documentLabel.trim(),
+                          })),
+                        ])
+                        setDocumentLabel('')
+                      }}
+                    />
+                    {documents.length > 0 && (
+                      <ul className="divide-y divide-ink-100 rounded-lg border border-ink-200">
+                        {documents.map((document) => (
+                          <li key={document.key} className="flex items-center gap-3 px-3 py-2.5">
+                            <FileText className="h-4 w-4 shrink-0 text-ink-400" aria-hidden="true" />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-ink">
+                                {document.label || document.file.name}
+                              </p>
+                              <p className="text-xs text-ink-500">
+                                {DOCUMENT_TYPES.find((type) => type.value === document.documentType)?.label}
+                                {' · '}
+                                {(document.file.size / 1024 / 1024).toFixed(1)} MB
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setDocuments((current) => current.filter((item) => item.key !== document.key))}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-danger-600 transition hover:bg-danger-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500"
+                              aria-label={`Remove ${document.file.name}`}
+                            >
+                              <Trash2 className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </CardBody>
+                </Card>
+
                 <Card>
                   <CardBody className="space-y-4">
                     <h2 className="text-base font-semibold text-ink">Review your application</h2>

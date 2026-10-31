@@ -3,7 +3,8 @@ import {
   Ban,
   Check,
   ExternalLink,
-  MoreHorizontal,
+  FileText,
+  Loader2,
   Pause,
   Percent,
   Play,
@@ -16,7 +17,6 @@ import {
   Button,
   ConfirmDialog,
   DataList,
-  Dropdown,
   EmptyState,
   Input,
   Modal,
@@ -36,10 +36,13 @@ import {
   Textarea,
 } from '@/components/ui'
 import { DataToolbar } from '@/components/tables/DataToolbar'
+import { RowActions } from '@/components/tables/RowActions'
 import { adminService } from '@/services'
+import { errorMessage } from '@/services/apiClient'
+import { formatFileSize } from '@/services/uploadService'
 import { usePeopleStore } from '@/context/peopleStore'
 import { toast } from '@/context/uiStore'
-import type { Seller } from '@/types'
+import type { Seller, SellerDocument } from '@/types'
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils'
 
 const PAGE_SIZE = 8
@@ -49,6 +52,12 @@ const STATUS_TONES: Record<Seller['status'], 'success' | 'warning' | 'danger' | 
   paused: 'warning',
   suspended: 'danger',
   closed: 'neutral',
+}
+
+const DOCUMENT_TONES: Record<SellerDocument['status'], 'success' | 'warning' | 'danger'> = {
+  approved: 'success',
+  pending: 'warning',
+  rejected: 'danger',
 }
 
 /** Seller directory with verification review, commission and status controls. */
@@ -64,6 +73,9 @@ export default function AdminSellersPage() {
   const [rejectMode, setRejectMode] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
   const [busy, setBusy] = useState(false)
+  const [documents, setDocuments] = useState<SellerDocument[]>([])
+  const [documentsLoading, setDocumentsLoading] = useState(false)
+  const [documentsError, setDocumentsError] = useState<string | null>(null)
 
   const [commissionSeller, setCommissionSeller] = useState<Seller | null>(null)
   const [commissionValue, setCommissionValue] = useState('10')
@@ -116,10 +128,24 @@ export default function AdminSellersPage() {
 
   const selectedPending = selected.filter((id) => sellers.find((s) => s.id === id)?.verificationStatus === 'pending')
 
+  const loadSellerDocuments = async (seller: Seller) => {
+    setDocumentsLoading(true)
+    setDocumentsError(null)
+    try {
+      setDocuments(await adminService.fetchSellerDocuments(seller.id))
+    } catch (error) {
+      setDocumentsError(errorMessage(error))
+    } finally {
+      setDocumentsLoading(false)
+    }
+  }
+
   const openReview = (seller: Seller) => {
     setReviewSeller(seller)
     setRejectMode(false)
     setRejectReason('')
+    setDocuments([])
+    void loadSellerDocuments(seller)
   }
 
   const approve = async (seller: Seller) => {
@@ -128,6 +154,8 @@ export default function AdminSellersPage() {
       await adminService.setSellerVerification(seller.id, 'approved')
       toast.success('Seller approved', `${seller.storeName} is now verified and can list products.`)
       setReviewSeller(null)
+    } catch (error) {
+      toast.error('Could not approve seller', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -145,6 +173,8 @@ export default function AdminSellersPage() {
       setReviewSeller(null)
       setRejectMode(false)
       setRejectReason('')
+    } catch (error) {
+      toast.error('Could not reject seller', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -188,6 +218,8 @@ export default function AdminSellersPage() {
       setBulk(null)
       setBulkReason('')
       setSelected([])
+    } catch (error) {
+      toast.error('Could not update applications', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -199,6 +231,8 @@ export default function AdminSellersPage() {
       await adminService.setSellerStatus(seller.id, status)
       toast.success('Seller status updated', `${seller.storeName} is now ${status}.`)
       setConfirm(null)
+    } catch (error) {
+      toast.error('Could not update seller status', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -324,15 +358,10 @@ export default function AdminSellersPage() {
                         <Badge tone={STATUS_TONES[seller.status]}>{seller.status}</Badge>
                       </TD>
                       <TD className="text-right">
-                        <Dropdown
+                        <RowActions
                           label={`Actions for ${seller.storeName}`}
-                          trigger={
-                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </span>
-                          }
                           items={[
-                            { label: 'Review application', icon: <Check className="h-4 w-4" />, onClick: () => openReview(seller) },
+                            { label: 'Review application', icon: <Check className="h-4 w-4" />, disabled: busy, onClick: () => openReview(seller) },
                             {
                               label: 'View store',
                               icon: <ExternalLink className="h-4 w-4" />,
@@ -341,17 +370,19 @@ export default function AdminSellersPage() {
                             {
                               label: 'Set commission',
                               icon: <Percent className="h-4 w-4" />,
+                              disabled: busy,
                               onClick: () => {
                                 setCommissionSeller(seller)
                                 setCommissionValue(String(seller.commissionRate))
                               },
                             },
-                            { label: 'Activate', icon: <Play className="h-4 w-4" />, divider: true, onClick: () => setSellerStatus(seller, 'active') },
-                            { label: 'Pause', icon: <Pause className="h-4 w-4" />, onClick: () => setSellerStatus(seller, 'paused') },
+                            { label: 'Activate', icon: <Play className="h-4 w-4" />, divider: true, disabled: busy, onClick: () => setSellerStatus(seller, 'active') },
+                            { label: 'Pause', icon: <Pause className="h-4 w-4" />, disabled: busy, onClick: () => setSellerStatus(seller, 'paused') },
                             {
                               label: 'Suspend',
                               icon: <Ban className="h-4 w-4" />,
                               tone: 'danger',
+                              disabled: busy,
                               onClick: () => setConfirm({ seller, status: 'suspended' }),
                             },
                           ]}
@@ -436,6 +467,67 @@ export default function AdminSellersPage() {
                 { label: 'Submitted', value: formatDate(reviewSeller.createdAt, 'long') },
               ]}
             />
+
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-ink">Verification documents</h3>
+                {documentsLoading && <Loader2 className="h-4 w-4 animate-spin text-ink-400" aria-label="Loading documents" />}
+              </div>
+
+              {documentsError ? (
+                <div className="space-y-2">
+                  <Alert tone="danger" title="Could not load documents">
+                    {documentsError}
+                  </Alert>
+                  <Button variant="outline" size="sm" onClick={() => void loadSellerDocuments(reviewSeller)}>
+                    Try again
+                  </Button>
+                </div>
+              ) : documentsLoading ? (
+                <p className="rounded-lg border border-dashed border-ink-200 px-3 py-4 text-sm text-ink-500">
+                  Loading documents…
+                </p>
+              ) : documents.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-ink-200 px-3 py-4 text-sm text-ink-500">
+                  This seller has not uploaded any verification documents yet.
+                </p>
+              ) : (
+                <ul className="divide-y divide-ink-100 rounded-lg border border-ink-200">
+                  {documents.map((document) => (
+                    <li key={document.id} className="flex items-center gap-3 px-3 py-2.5">
+                      <FileText className="h-4 w-4 shrink-0 text-ink-400" aria-hidden="true" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-sm font-medium text-ink">
+                            {document.label || document.originalName || 'Verification document'}
+                          </p>
+                          <Badge tone={DOCUMENT_TONES[document.status]}>{document.status}</Badge>
+                        </div>
+                        <p className="mt-0.5 text-xs text-ink-500">
+                          {document.documentType.replace(/_/g, ' ')}
+                          {' · '}
+                          {formatFileSize(document.sizeBytes)}
+                          {' · '}
+                          {formatDate(document.createdAt)}
+                        </p>
+                        {document.reviewNotes && (
+                          <p className="mt-1 text-xs text-ink-600">Reviewer note: {document.reviewNotes}</p>
+                        )}
+                      </div>
+                      <a
+                        href={document.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-ink-600 transition hover:bg-ink-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-300"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                        View
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
             {rejectMode && (
               <Textarea

@@ -27,11 +27,13 @@ import {
 } from '@/components/ui'
 import { OrderStatusTimeline } from '@/components/dashboard/OrderStatusTimeline'
 import { adminService, orderService } from '@/services'
-import { useOrderById, useOrderStore } from '@/context/orderStore'
+import { errorMessage } from '@/services/apiClient'
+import { useOrderById } from '@/context/orderStore'
 import { usePeopleStore } from '@/context/peopleStore'
 import { toast } from '@/context/uiStore'
-import type { OrderItem, OrderStatus, PaymentStatus } from '@/types'
+import type { OrderItem, OrderStatus } from '@/types'
 import { formatCurrency, formatDate, formatNumber } from '@/lib/utils'
+import { nextOrderStatuses, ORDER_STATUS_LABELS } from '@/lib/orderTransitions'
 
 const FULFILLMENT_OPTIONS: Array<{ label: string; value: OrderItem['fulfillmentStatus'] }> = [
   { label: 'Unfulfilled', value: 'unfulfilled' },
@@ -58,7 +60,9 @@ export default function AdminOrderDetailPage() {
   useEffect(() => {
     if (!id) return
     void orderService.getAdminOrder(Number(id))
-    void adminService.fetchSellers({ pageSize: 100 }).catch(() => undefined)
+    void adminService
+      .fetchSellers({ pageSize: 100 })
+      .catch((error) => toast.error('Could not load sellers', errorMessage(error)))
   }, [id])
 
   const sellers = usePeopleStore((s) => s.sellers)
@@ -87,24 +91,39 @@ export default function AdminOrderDetailPage() {
   }
 
   const setStatus = async (next: OrderStatus) => {
-    await orderService.updateOrderStatus(order.id, next)
-    toast.success('Order status updated', `${order.orderNumber} is now ${next.replace(/_/g, ' ')}.`)
+    try {
+      await orderService.updateOrderStatus(order.id, next)
+      toast.success('Order status updated', `${order.orderNumber} is now ${next.replace(/_/g, ' ')}.`)
+    } catch (error) {
+      toast.error('Could not update order status', errorMessage(error))
+    }
   }
 
   const markPaid = async () => {
-    await orderService.updatePaymentStatus(order.id, 'paid')
-    toast.success('Payment marked as paid', 'The order was updated on the server.')
+    try {
+      await orderService.updatePaymentStatus(order.id, 'paid')
+      toast.success('Payment marked as paid', 'The order was updated on the server.')
+    } catch (error) {
+      toast.error('Could not update payment', errorMessage(error))
+    }
   }
 
-  const saveNote = () => {
+  const saveNote = async () => {
     if (!noteText.trim()) {
       toast.error('Note cannot be empty', 'Add a short internal note before saving.')
       return
     }
-    useOrderStore.getState().addNote(order.id, noteText.trim())
-    toast.success('Note added', 'The note was appended to the order history.')
-    setNoteText('')
-    setNoteOpen(false)
+    setBusy(true)
+    try {
+      await orderService.addAdminNote(order.id, noteText.trim())
+      toast.success('Note added', 'The note was appended to the order history.')
+      setNoteText('')
+      setNoteOpen(false)
+    } catch (error) {
+      toast.error('Could not add note', errorMessage(error))
+    } finally {
+      setBusy(false)
+    }
   }
 
   const submitRefund = async () => {
@@ -113,15 +132,17 @@ export default function AdminOrderDetailPage() {
       toast.error('Enter a valid refund amount', 'The amount must be greater than zero.')
       return
     }
-    const status: PaymentStatus = amount >= order.grandTotal ? 'refunded' : 'partially_refunded'
     setBusy(true)
     try {
-      await orderService.updatePaymentStatus(order.id, status)
+      await orderService.createAdminRefund(order.id, amount, refundReason)
+      await orderService.getAdminOrder(order.id).catch(() => undefined)
       toast.success(
-        'Refund recorded',
-        `${formatCurrency(amount)} recorded as ${status.replace(/_/g, ' ')}. No money moved — a real refund must be issued via the payment provider.`,
+        'Refund request created',
+        `${formatCurrency(amount)} is now queued for review. Process the payout from Transactions.`,
       )
       setRefundOpen(false)
+    } catch (error) {
+      toast.error('Could not create refund', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -143,25 +164,26 @@ export default function AdminOrderDetailPage() {
             description={`Placed ${formatDate(order.placedAt, 'time')} · ${order.customerName}`}
             actions={
               <>
-                <Dropdown
-                  label="Update order status"
-                  trigger={
-                    <Button variant="outline">
-                      Update status
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  }
-                  items={[
-                    { label: 'Confirmed', onClick: () => setStatus('confirmed') },
-                    { label: 'Processing', onClick: () => setStatus('processing') },
-                    { label: 'Partially shipped', onClick: () => setStatus('partially_shipped') },
-                    { label: 'Shipped', onClick: () => setStatus('shipped') },
-                    { label: 'Delivered', onClick: () => setStatus('delivered') },
-                  ]}
-                />
-                <Button variant="outline" onClick={markPaid}>
-                  Mark as paid
-                </Button>
+                {nextOrderStatuses(order.status).length > 0 && (
+                  <Dropdown
+                    label="Update order status"
+                    trigger={
+                      <Button variant="outline">
+                        Update status
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    }
+                    items={nextOrderStatuses(order.status).map((status) => ({
+                      label: ORDER_STATUS_LABELS[status],
+                      onClick: () => setStatus(status),
+                    }))}
+                  />
+                )}
+                {order.paymentStatus !== 'paid' && order.paymentStatus !== 'refunded' && (
+                  <Button variant="outline" onClick={markPaid}>
+                    Mark as paid
+                  </Button>
+                )}
                 <Button variant="outline" onClick={() => setNoteOpen(true)}>
                   <StickyNote className="h-4 w-4" />
                   Add note
@@ -170,9 +192,11 @@ export default function AdminOrderDetailPage() {
                   <Printer className="h-4 w-4" />
                   Print
                 </Button>
-                <Button variant="danger" onClick={() => { setRefundAmount(String(order.grandTotal)); setRefundOpen(true) }}>
-                  Refund
-                </Button>
+                {(order.paymentStatus === 'paid' || order.paymentStatus === 'partially_refunded') && (
+                  <Button variant="danger" onClick={() => { setRefundAmount(String(order.grandTotal)); setRefundOpen(true) }}>
+                    Refund
+                  </Button>
+                )}
               </>
             }
           />
@@ -252,9 +276,14 @@ export default function AdminOrderDetailPage() {
                     <Select
                       id={`fulfil-${item.id}`}
                       value={item.fulfillmentStatus}
-                      onChange={(e) => {
-                        orderService.updateItemFulfillment(order.id, item.id, e.target.value as OrderItem['fulfillmentStatus'])
-                        toast.success('Fulfilment updated', `${item.productName} → ${e.target.value}.`)
+                      onChange={async (e) => {
+                        const next = e.target.value as OrderItem['fulfillmentStatus']
+                        try {
+                          await orderService.updateItemFulfillment(order.id, item.id, next, 'admin')
+                          toast.success('Fulfilment updated', `${item.productName} → ${next}.`)
+                        } catch (error) {
+                          toast.error('Could not update fulfilment', errorMessage(error))
+                        }
                       }}
                       options={FULFILLMENT_OPTIONS}
                       className="w-36"
@@ -367,10 +396,10 @@ export default function AdminOrderDetailPage() {
         size="md"
         footer={
           <>
-            <Button variant="outline" onClick={() => setNoteOpen(false)}>
+            <Button variant="outline" onClick={() => setNoteOpen(false)} disabled={busy}>
               Cancel
             </Button>
-            <Button onClick={saveNote}>Add note</Button>
+            <Button onClick={saveNote} loading={busy}>Add note</Button>
           </>
         }
       >
@@ -387,8 +416,8 @@ export default function AdminOrderDetailPage() {
       <Modal
         open={refundOpen}
         onClose={() => setRefundOpen(false)}
-        title="Record a refund"
-        description="Records a refund against this order. It cannot be undone."
+        title="Create a refund request"
+        description="Creates an auditable refund request. Approve or complete it from Transactions; the provider is only called when the refund is completed."
         size="md"
         footer={
           <>
@@ -396,14 +425,14 @@ export default function AdminOrderDetailPage() {
               Cancel
             </Button>
             <Button variant="danger" onClick={submitRefund} loading={busy}>
-              Record refund
+              Create refund request
             </Button>
           </>
         }
       >
         <div className="space-y-4">
-          <label className="sr-only" htmlFor="refund-amount">
-            Refund amount
+          <label className="mb-1.5 block text-sm font-medium text-ink" htmlFor="refund-amount">
+            Refund amount (TZS)
           </label>
           <input
             id="refund-amount"
@@ -422,8 +451,8 @@ export default function AdminOrderDetailPage() {
             options={REFUND_REASONS.map((r) => ({ label: r, value: r }))}
           />
           <p className="text-xs text-ink-500">
-            Order total is {formatCurrency(order.grandTotal)}. A full refund marks the payment as refunded; a partial amount marks it partially
-            refunded.
+            Order total is {formatCurrency(order.grandTotal)}. The refund request is recorded immediately; the
+            payment provider is only called when the request is completed in Transactions.
           </p>
         </div>
       </Modal>

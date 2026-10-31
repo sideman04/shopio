@@ -77,4 +77,44 @@ final class SellerValidator
             'destination_label' => 'required|safe_text|string|max:150',
         ]);
     }
+
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
+    public static function documentUpload(array $data): array
+    {
+        return Validator::check($data, [
+            'document_type' => 'required|in:business_licence,tax_certificate,id_document,address_proof,bank_statement,other',
+            'label' => 'nullable|safe_text|string|max:120',
+        ]);
+    }
+
+    /**
+     * Seller notification/shipping/payment preferences are a JSON bag.
+     *
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
+    public static function preferences(array $data): array
+    {
+        $validated = Validator::check($data, [
+            'preferences' => 'required|array|min:1|max:50',
+        ]);
+
+        $clean = [];
+        foreach ($validated['preferences'] as $key => $value) {
+            if (preg_match('/^[a-z0-9_.]{2,80}$/', (string) $key) !== 1) {
+                throw new \Shopio\Exceptions\ValidationException(['preferences' => ["Invalid preference key: {$key}."]]);
+            }
+
+            if (!is_scalar($value) && $value !== null && !is_array($value)) {
+                throw new \Shopio\Exceptions\ValidationException(['preferences' => ["Preference '{$key}' must be a scalar or array."]]);
+            }
+
+            $clean[(string) $key] = $value;
+        }
+
+        return ['preferences' => $clean];
+    }
 }

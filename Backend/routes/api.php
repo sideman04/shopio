@@ -21,6 +21,7 @@ use Shopio\Controllers\CatalogController;
 use Shopio\Controllers\CronController;
 use Shopio\Controllers\CustomerController;
 use Shopio\Controllers\HealthController;
+use Shopio\Controllers\MediaController;
 use Shopio\Controllers\OrderController;
 use Shopio\Controllers\PaymentWebhookController;
 use Shopio\Controllers\SellerController;
@@ -38,6 +39,7 @@ return static function (Router $r): void {
 
     // --- Health / infrastructure ---------------------------------------------
     $r->get('/health', [HealthController::class, 'show']);
+    $r->get('/media/{path:.*}', [MediaController::class, 'show']);
     $r->post('/internal/maintenance', [CronController::class, 'run']);
     $r->post('/webhooks/payments/{provider}', [PaymentWebhookController::class, 'handle']);
 
@@ -111,12 +113,19 @@ return static function (Router $r): void {
 
     // --- Uploads --------------------------------------------------------------
     $r->post('/uploads/images', [UploadController::class, 'image'], array_merge($authCsrf, ['mw.ratelimit.upload']));
+    $r->post('/uploads/documents', [UploadController::class, 'document'], array_merge($authCsrf, ['mw.ratelimit.upload']));
 
     // --- Seller: onboarding + workspace --------------------------------------
     // Registration is open to any authenticated customer (role grants happen server-side).
     $r->post('/sellers/register', [SellerController::class, 'register'], array_merge($authCsrf, $write));
     $r->get('/sellers/store', [SellerController::class, 'store'], ['mw.auth', 'mw.role.seller']);
     $r->patch('/sellers/store', [SellerController::class, 'updateStore'], $seller);
+    $r->get('/sellers/documents', [SellerController::class, 'documents'], ['mw.auth', 'mw.role.seller']);
+    $r->post('/sellers/documents', [SellerController::class, 'uploadDocument'], $seller);
+    $r->delete('/sellers/documents/{id}', [SellerController::class, 'deleteDocument'], $seller);
+    $r->get('/sellers/documents/{id}/file', [SellerController::class, 'downloadDocument'], ['mw.auth', 'mw.role.seller']);
+    $r->get('/sellers/preferences', [SellerController::class, 'preferences'], ['mw.auth', 'mw.role.seller']);
+    $r->patch('/sellers/preferences', [SellerController::class, 'updatePreferences'], $seller);
     $r->get('/sellers/dashboard', [SellerController::class, 'dashboard'], ['mw.auth', 'mw.role.seller']);
     $r->get('/sellers/analytics', [SellerController::class, 'analytics'], ['mw.auth', 'mw.role.seller']);
     $r->get('/sellers/orders', [SellerController::class, 'orders'], ['mw.auth', 'mw.role.seller']);
@@ -152,6 +161,8 @@ return static function (Router $r): void {
     $r->patch('/admin/users/{id}/status', [AdminController::class, 'updateUserStatus'], $admin);
     $r->put('/admin/users/{id}/roles', [AdminController::class, 'updateUserRoles'], $admin);
     $r->get('/admin/sellers', [AdminController::class, 'sellers'], ['mw.auth', 'mw.role.admin']);
+    $r->get('/admin/sellers/{id}/documents', [AdminController::class, 'sellerDocuments'], ['mw.auth', 'mw.role.admin']);
+    $r->get('/admin/sellers/{id}/documents/{documentId}/file', [AdminController::class, 'downloadSellerDocument'], ['mw.auth', 'mw.role.admin']);
     $r->patch('/admin/sellers/{id}', [AdminController::class, 'verifySeller'], $admin);
     $r->get('/admin/products', [AdminController::class, 'products'], ['mw.auth', 'mw.role.admin']);
     $r->patch('/admin/products/{id}', [AdminController::class, 'moderateProduct'], $admin);
@@ -162,6 +173,9 @@ return static function (Router $r): void {
     $r->get('/admin/orders', [AdminController::class, 'orders'], ['mw.auth', 'mw.role.admin']);
     $r->get('/admin/orders/{id}', [AdminController::class, 'order'], ['mw.auth', 'mw.role.admin']);
     $r->patch('/admin/orders/{id}/status', [AdminController::class, 'updateOrderStatus'], $admin);
+    $r->post('/admin/orders/{id}/notes', [AdminController::class, 'addOrderNote'], $admin);
+    $r->patch('/admin/orders/{id}/items/{itemId}', [AdminController::class, 'fulfillOrderItem'], $admin);
+    $r->post('/admin/orders/{id}/refunds', [AdminController::class, 'createOrderRefund'], $admin);
     $r->get('/admin/transactions', [AdminController::class, 'transactions'], ['mw.auth', 'mw.role.admin']);
     $r->get('/admin/promotions', [AdminController::class, 'promotions'], ['mw.auth', 'mw.role.admin']);
     $r->post('/admin/promotions', [AdminController::class, 'createPromotion'], $admin);
@@ -170,6 +184,7 @@ return static function (Router $r): void {
     $r->get('/admin/reviews', [AdminController::class, 'reviews'], ['mw.auth', 'mw.role.admin']);
     $r->get('/admin/reviews/reports', [AdminController::class, 'reviewReports'], ['mw.auth', 'mw.role.admin']);
     $r->patch('/admin/reviews/reports/{id}', [AdminController::class, 'resolveReport'], $admin);
+    $r->post('/admin/reviews/{id}/reply', [AdminController::class, 'replyReview'], $admin);
     $r->patch('/admin/reviews/{id}', [AdminController::class, 'moderateReview'], $admin);
     $r->get('/admin/banners', [AdminController::class, 'banners'], ['mw.auth', 'mw.role.admin']);
     $r->post('/admin/banners', [AdminController::class, 'createBanner'], $admin);
