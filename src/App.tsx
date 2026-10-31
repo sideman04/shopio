@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { BrowserRouter } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import { AppRoutes } from '@/app/router'
 import { bootstrap } from '@/app/bootstrap'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
@@ -33,6 +34,7 @@ export default function App() {
       <NetworkStatus />
       <AppRoutes />
       <InstallPrompt />
+      <Analytics />
     </BrowserRouter>
   )
 }
