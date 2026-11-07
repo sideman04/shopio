@@ -316,6 +316,52 @@ final class AdminService
         return ['id' => $userId, 'roles' => $requested];
     }
 
+    public function deleteUser(AuthenticatedUser $auth, int $userId, Request $request): void
+    {
+        $this->requireUser($userId);
+        if ($userId === $auth->id) {
+            throw new ConflictException('You cannot delete your own administrator account.');
+        }
+
+        $seller = $this->sellers->findByUserId($userId);
+        $this->db->transaction(function () use ($userId, $seller): void {
+            $this->users->softDelete($userId);
+            if ($seller !== null) {
+                $this->archiveSeller((int) $seller['id'], $userId);
+            }
+        });
+
+        $this->audit->record($auth, 'admin.user_deleted', 'user', $userId, $request);
+    }
+
+    public function deleteSeller(AuthenticatedUser $auth, int $sellerId, Request $request): void
+    {
+        $seller = $this->sellers->findById($sellerId);
+        if ($seller === null) {
+            throw new NotFoundException('The requested store does not exist.');
+        }
+
+        $this->db->transaction(function () use ($sellerId, $seller): void {
+            $this->archiveSeller($sellerId, (int) $seller['user_id']);
+        });
+
+        $this->audit->record($auth, 'admin.seller_deleted', 'seller', $sellerId, $request);
+    }
+
+    private function archiveSeller(int $sellerId, int $userId): void
+    {
+        $this->sellers->close($sellerId);
+        $this->db->execute(
+            "UPDATE products SET status = 'archived' WHERE seller_id = :seller_id AND deleted_at IS NULL",
+            ['seller_id' => $sellerId],
+        );
+
+        $sellerRoleId = $this->roles->idByCode('seller');
+        if ($sellerRoleId !== null) {
+            $this->users->removeRole($userId, $sellerRoleId);
+        }
+    }
+
     /**
      * @return array{items:list<array<string,mixed>>,total:int}
      */

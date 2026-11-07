@@ -415,6 +415,25 @@ final class ProductService
             $this->syncVariantOptions($productId, $variantId, $variant['options']);
         }
 
+        // Inventory rows are created by the database trigger. Seed initial
+        // stock through the movement ledger so quantity_on_hand remains
+        // authoritative and publish does not lose the seller's stock value.
+        $stock = (int) ($variant['stock'] ?? 0);
+        if ($stock > 0) {
+            $this->inventory->recordMovement(
+                $variantId,
+                'restock',
+                $stock,
+                null,
+                'manual',
+                null,
+                'Initial stock from product creation',
+            );
+        }
+        if (array_key_exists('low_stock_threshold', $variant)) {
+            $this->inventory->setLowStockThreshold($variantId, (int) $variant['low_stock_threshold']);
+        }
+
         return $variantId;
     }
 

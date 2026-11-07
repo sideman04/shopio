@@ -9,6 +9,7 @@ import {
   Percent,
   Play,
   Store,
+  Trash2,
   X,
 } from 'lucide-react'
 import {
@@ -81,8 +82,15 @@ export default function AdminSellersPage() {
   const [commissionValue, setCommissionValue] = useState('10')
 
   const [confirm, setConfirm] = useState<{ seller: Seller; status: Seller['status'] } | null>(null)
+  const [deleteSellerTarget, setDeleteSellerTarget] = useState<Seller | null>(null)
   const [bulk, setBulk] = useState<{ ids: number[]; action: 'approve' | 'reject' } | null>(null)
   const [bulkReason, setBulkReason] = useState('')
+
+  // Older applications used `not_submitted` before seller onboarding was
+  // changed to enter the review queue immediately. Treat them as pending so
+  // existing applicants are not hidden from administrators.
+  const isPendingApplication = (seller: Seller) =>
+    seller.verificationStatus === 'pending' || seller.verificationStatus === 'not_submitted'
 
   useEffect(() => {
     setPage(1)
@@ -95,7 +103,7 @@ export default function AdminSellersPage() {
   const counts = useMemo(
     () => ({
       all: sellers.length,
-      pending: sellers.filter((s) => s.verificationStatus === 'pending').length,
+      pending: sellers.filter(isPendingApplication).length,
       approved: sellers.filter((s) => s.verificationStatus === 'approved').length,
       rejected: sellers.filter((s) => s.verificationStatus === 'rejected').length,
       suspended: sellers.filter((s) => s.status === 'suspended').length,
@@ -106,7 +114,7 @@ export default function AdminSellersPage() {
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase()
     return sellers.filter((seller) => {
-      if (tab === 'pending' && seller.verificationStatus !== 'pending') return false
+      if (tab === 'pending' && !isPendingApplication(seller)) return false
       if (tab === 'approved' && seller.verificationStatus !== 'approved') return false
       if (tab === 'rejected' && seller.verificationStatus !== 'rejected') return false
       if (tab === 'suspended' && seller.status !== 'suspended') return false
@@ -126,7 +134,10 @@ export default function AdminSellersPage() {
 
   const totalSales = useMemo(() => sellers.reduce((sum, s) => sum + (s.totalSales ?? 0), 0), [sellers])
 
-  const selectedPending = selected.filter((id) => sellers.find((s) => s.id === id)?.verificationStatus === 'pending')
+  const selectedPending = selected.filter((id) => {
+    const seller = sellers.find((item) => item.id === id)
+    return seller ? isPendingApplication(seller) : false
+  })
 
   const loadSellerDocuments = async (seller: Seller) => {
     setDocumentsLoading(true)
@@ -233,6 +244,20 @@ export default function AdminSellersPage() {
       setConfirm(null)
     } catch (error) {
       toast.error('Could not update seller status', errorMessage(error))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const deleteSeller = async () => {
+    if (!deleteSellerTarget) return
+    setBusy(true)
+    try {
+      await adminService.deleteSeller(deleteSellerTarget.id)
+      toast.success('Seller deleted', `${deleteSellerTarget.storeName} has been closed.`)
+      setDeleteSellerTarget(null)
+    } catch (error) {
+      toast.error('Could not delete seller', errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -384,6 +409,12 @@ export default function AdminSellersPage() {
                               tone: 'danger',
                               disabled: busy,
                               onClick: () => setConfirm({ seller, status: 'suspended' }),
+                            },
+                            {
+                              label: 'Delete seller',
+                              icon: <Trash2 className="h-4 w-4" />,
+                              tone: 'danger',
+                              onClick: () => setDeleteSellerTarget(seller),
                             },
                           ]}
                         />
@@ -581,6 +612,17 @@ export default function AdminSellersPage() {
         title={confirm ? `Suspend ${confirm.seller.storeName}?` : ''}
         description="A suspended store is hidden from the storefront and cannot list or fulfil orders until reactivated."
         confirmLabel="Suspend"
+        tone="danger"
+        loading={busy}
+      />
+
+      <ConfirmDialog
+        open={!!deleteSellerTarget}
+        onClose={() => setDeleteSellerTarget(null)}
+        onConfirm={deleteSeller}
+        title={deleteSellerTarget ? `Delete ${deleteSellerTarget.storeName}?` : ''}
+        description="This closes the seller store, archives its products and removes seller access. Orders, payouts, documents and audit history are preserved."
+        confirmLabel="Delete seller"
         tone="danger"
         loading={busy}
       />

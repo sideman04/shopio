@@ -30,7 +30,7 @@ final class ProductRepository extends Repository
      */
     private function publicSelect(): string
     {
-        return 'p.id, p.seller_id, p.category_id, p.name, p.slug, p.short_description, p.brand,
+        return 'p.id, p.seller_id, p.category_id, p.name, p.slug, p.short_description, p.description, p.brand,
                 p.condition_type, p.status, p.currency, p.created_at, p.updated_at,
                 c.name AS category_name, c.slug AS category_slug,
                 s.store_name AS seller_name, s.store_slug AS seller_slug,

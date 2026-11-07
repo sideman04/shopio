@@ -82,7 +82,7 @@ final class SellerRepository extends Repository
             'INSERT INTO seller_profiles
                 (user_id, store_name, store_slug, store_description, business_category, commission_rate, verification_status, status)
              VALUES
-                (:user_id, :store_name, :slug, :description, :business_category, :commission_rate, \'not_submitted\', \'active\')',
+                (:user_id, :store_name, :slug, :description, :business_category, :commission_rate, \'pending\', \'active\')',
             [
                 'user_id' => $userId,
                 'store_name' => $storeName,
@@ -175,6 +175,14 @@ final class SellerRepository extends Repository
         $this->db->execute(
             'UPDATE seller_profiles SET status = :status WHERE id = :id',
             ['status' => $status, 'id' => $sellerId],
+        );
+    }
+
+    public function close(int $sellerId): void
+    {
+        $this->db->execute(
+            "UPDATE seller_profiles SET status = 'closed' WHERE id = :id",
+            ['id' => $sellerId],
         );
     }
 

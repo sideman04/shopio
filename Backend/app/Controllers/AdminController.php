@@ -68,6 +68,13 @@ final class AdminController extends Controller
         return $this->success($result, 'User status updated successfully', 200, [], $request);
     }
 
+    public function deleteUser(Request $request, array $params): Response
+    {
+        $this->admin->deleteUser($this->admin($request), $this->intParam($params, 'id'), $request);
+
+        return $this->success(null, 'User deleted successfully', 200, [], $request);
+    }
+
     /**
      * @param array<string,string> $params
      */
@@ -114,6 +121,13 @@ final class AdminController extends Controller
         $seller = $this->admin->verifySeller($this->admin($request), $this->intParam($params, 'id'), $data, $request);
 
         return $this->success($seller, 'Seller updated successfully', 200, [], $request);
+    }
+
+    public function deleteSeller(Request $request, array $params): Response
+    {
+        $this->admin->deleteSeller($this->admin($request), $this->intParam($params, 'id'), $request);
+
+        return $this->success(null, 'Seller deleted successfully', 200, [], $request);
     }
 
     /**

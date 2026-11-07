@@ -432,6 +432,7 @@ final class Presenter
         $summary = [
             'id' => (int) $row['id'],
             'orderNumber' => (string) $row['order_number'],
+            'userId' => isset($row['user_id']) ? (int) $row['user_id'] : null,
             'status' => (string) $row['status'],
             'paymentStatus' => (string) $row['payment_status'],
             'fulfillmentStatus' => (string) $row['fulfillment_status'],

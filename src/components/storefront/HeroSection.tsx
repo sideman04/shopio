@@ -69,7 +69,7 @@ export function HeroSection({ banner }: { banner?: Banner | null }) {
                 fallbackLabel="Shopio marketplace"
                 wrapperClassName="h-[250px] w-full bg-ink-800 sm:h-[340px] lg:h-[390px]"
                 loadingClassName="bg-ink-800"
-                fetchPriority="high"
+                loading="eager"
               />
               <span className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gold-400" aria-hidden="true" />
             </div>

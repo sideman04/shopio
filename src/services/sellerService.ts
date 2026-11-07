@@ -133,11 +133,23 @@ interface ProductPayload {
 }
 
 function formToCreatePayload(values: ProductFormValues): ProductPayload {
-  const options = Object.fromEntries(
-    values.options
-      .map((option) => [option.name.trim(), option.values[0]?.trim()] as const)
-      .filter(([name, value]) => name && value),
-  ) as Record<string, string>
+  const optionTypes = values.options
+    .map((option) => ({
+      name: option.name.trim(),
+      values: option.values.map((value) => value.trim()).filter(Boolean),
+    }))
+    .filter((option) => option.name && option.values.length > 0)
+
+  let combinations: Array<Record<string, string>> = [{}]
+  optionTypes.forEach((option) => {
+    combinations = combinations.flatMap((combination) =>
+      option.values.map((value) => ({ ...combination, [option.name]: value })),
+    )
+  })
+
+  const variantCount = combinations.length
+  const perVariant = Math.floor(values.stock / variantCount)
+  const remainder = values.stock % variantCount
 
   return {
     name: values.name,
@@ -146,17 +158,18 @@ function formToCreatePayload(values: ProductFormValues): ProductPayload {
     description: values.description || null,
     brand: values.brand || null,
     condition_type: values.conditionType,
-    variants: [
-      {
-        sku: values.sku,
-        variant_name: Object.values(options).join(' / ') || 'Default',
-        price: values.price,
-        compare_at_price: values.compareAtPrice ?? null,
-        is_default: true,
-        is_active: true,
-        options,
-      },
-    ],
+    variants: combinations.map((options, index) => ({
+      // SKUs must be unique when options generate multiple variants.
+      sku: variantCount > 1 ? `${values.sku}-${index + 1}` : values.sku,
+      variant_name: Object.values(options).join(' / ') || 'Default',
+      price: values.price,
+      compare_at_price: values.compareAtPrice ?? null,
+      stock: perVariant + (index < remainder ? 1 : 0),
+      low_stock_threshold: values.lowStockThreshold ?? 5,
+      is_default: index === 0,
+      is_active: true,
+      options,
+    })),
     images: values.images.map((url, index) => ({
       image_url: absoluteMediaUrl(url),
       sort_order: index,

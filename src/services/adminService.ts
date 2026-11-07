@@ -147,6 +147,11 @@ export async function setUserStatus(userId: number, status: UserStatus, reason?:
   return next
 }
 
+export async function deleteUser(userId: number): Promise<void> {
+  await api.delete<null>(`/admin/users/${userId}`)
+  usePeopleStore.getState().removeUser(userId)
+}
+
 export async function setUserRoles(userId: number, roles: User['roles']) {
   const response = await api.put<Record<string, unknown>>(`/admin/users/${userId}/roles`, { roles })
   const next = Array.isArray(response.data?.roles) ? (response.data.roles as User['roles']) : roles
@@ -199,6 +204,11 @@ export async function setSellerStatus(sellerId: number, status: Seller['status']
   const seller = mapSeller(response.data)
   usePeopleStore.getState().upsertSeller(seller)
   return seller
+}
+
+export async function deleteSeller(sellerId: number): Promise<void> {
+  await api.delete<null>(`/admin/sellers/${sellerId}`)
+  usePeopleStore.getState().removeSeller(sellerId)
 }
 
 export async function setSellerCommission(sellerId: number, commissionRate: number): Promise<Seller> {

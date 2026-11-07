@@ -138,6 +138,14 @@ final class UserRepository extends Repository
         $this->db->execute('UPDATE users SET status = :status WHERE id = :id', ['status' => $status, 'id' => $userId]);
     }
 
+    public function softDelete(int $userId): void
+    {
+        $this->db->execute(
+            "UPDATE users SET status = 'disabled', deleted_at = UTC_TIMESTAMP() WHERE id = :id",
+            ['id' => $userId],
+        );
+    }
+
     /**
      * @return list<string>
      */

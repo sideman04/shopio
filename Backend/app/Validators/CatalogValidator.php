@@ -78,6 +78,8 @@ final class CatalogValidator
             'sku' => 'required|sku|max:100',
             'variant_name' => 'sometimes|safe_text|string|max:150',
             'price' => 'required|decimal|min:0|max:99999999999',
+            'stock' => 'sometimes|integer|min:0|max:100000000',
+            'low_stock_threshold' => 'sometimes|integer|min:0|max:100000000',
             'compare_at_price' => 'nullable|decimal|min:0',
             'cost_price' => 'nullable|decimal|min:0',
             'weight_grams' => 'nullable|integer|min:0|max:100000000',

@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   BarChart3,
   Boxes,
@@ -18,6 +20,9 @@ import { useSellerProducts } from '@/context/catalogStore'
 import { useSellerOrders } from '@/context/orderStore'
 import { usePeopleStore } from '@/context/peopleStore'
 import { useCatalogStore } from '@/context/catalogStore'
+import { sellerService } from '@/services'
+import type { Seller } from '@/types'
+import SellerApplicationPendingPage from '@/pages/seller/SellerApplicationPendingPage'
 
 const NAV: NavGroup[] = [
   {
@@ -55,7 +60,10 @@ const NAV: NavGroup[] = [
 
 /** Seller centre shell — wraps every `/seller/*` route except onboarding/registration. */
 export function SellerLayout() {
+  const location = useLocation()
   const user = useAuthStore((s) => s.session?.user ?? null)
+  const [seller, setSeller] = useState<Seller | null>(null)
+  const [sellerLoading, setSellerLoading] = useState(true)
   const sellerId = user?.sellerId ?? usePeopleStore.getState().sellers[0]?.id ?? 1
   const products = useSellerProducts(sellerId)
   const orders = useSellerOrders(sellerId)
@@ -66,6 +74,31 @@ export function SellerLayout() {
     .filter((v) => v.stock <= v.lowStockThreshold).length
 
   const pendingOrders = orders.filter((o) => o.status === 'pending' || o.status === 'processing').length
+
+  useEffect(() => {
+    if (!user?.sellerId) {
+      setSellerLoading(false)
+      return
+    }
+
+    let active = true
+    setSellerLoading(true)
+    void sellerService
+      .fetchStore()
+      .then((store) => {
+        if (active) setSeller(store)
+      })
+      .catch(() => {
+        if (active) setSeller(null)
+      })
+      .finally(() => {
+        if (active) setSellerLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [user?.sellerId])
 
   const groups: NavGroup[] = NAV.map((group) => ({
     ...group,
@@ -82,7 +115,13 @@ export function SellerLayout() {
 
   return (
     <ProtectedRoute role="seller">
-      <DashboardShell roleLabel="Seller centre" navGroups={groups} notificationUserId={user?.id ?? 0} />
+      {sellerLoading ? (
+        <div className="mx-auto max-w-3xl px-4 py-20 text-center text-sm text-ink-500">Loading your seller application…</div>
+      ) : seller?.verificationStatus !== 'approved' && location.pathname !== '/seller/settings' ? (
+        <SellerApplicationPendingPage seller={seller} />
+      ) : (
+        <DashboardShell roleLabel="Seller centre" navGroups={groups} notificationUserId={user?.id ?? 0} />
+      )}
     </ProtectedRoute>
   )
 }

@@ -14,7 +14,9 @@ interface PeopleState {
   setUsers: (users: User[]) => void
   setSellers: (sellers: Seller[]) => void
   upsertUser: (user: User) => void
+  removeUser: (id: number) => void
   upsertSeller: (seller: Seller) => void
+  removeSeller: (id: number) => void
 
   setUserStatus: (userId: number, status: UserStatus) => void
   updateUser: (userId: number, patch: Partial<User>) => void
@@ -49,6 +51,10 @@ export const usePeopleStore = create<PeopleState>((set, get) => ({
     set({ users: copy })
   },
 
+  removeUser(id) {
+    set({ users: get().users.filter((user) => user.id !== id) })
+  },
+
   upsertSeller(seller) {
     const sellers = get().sellers
     const index = sellers.findIndex((item) => item.id === seller.id)
@@ -59,6 +65,10 @@ export const usePeopleStore = create<PeopleState>((set, get) => ({
     const copy = [...sellers]
     copy[index] = seller
     set({ sellers: copy })
+  },
+
+  removeSeller(id) {
+    set({ sellers: get().sellers.filter((seller) => seller.id !== id) })
   },
 
   setUserStatus(userId, status) {

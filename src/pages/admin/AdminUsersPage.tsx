@@ -7,6 +7,7 @@ import {
   KeyRound,
   Send,
   ShieldCheck,
+  Trash2,
   UserCog,
   Users as UsersIcon,
 } from 'lucide-react'
@@ -94,6 +95,7 @@ export default function AdminUsersPage() {
   const [confirm, setConfirm] = useState<{ ids: number[]; status: UserStatus; title: string; description: string } | null>(null)
   const [busy, setBusy] = useState(false)
   const [roleBusy, setRoleBusy] = useState(false)
+  const [deleteUserTarget, setDeleteUserTarget] = useState<User | null>(null)
 
   useEffect(() => {
     setPage(1)
@@ -178,6 +180,20 @@ export default function AdminUsersPage() {
       toast.error('Could not update roles', errorMessage(error))
     } finally {
       setRoleBusy(false)
+    }
+  }
+
+  const deleteUser = async () => {
+    if (!deleteUserTarget) return
+    setBusy(true)
+    try {
+      await adminService.deleteUser(deleteUserTarget.id)
+      toast.success('User deleted', `${deleteUserTarget.fullName}'s account has been disabled.`)
+      setDeleteUserTarget(null)
+    } catch (error) {
+      toast.error('Could not delete user', errorMessage(error))
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -418,6 +434,12 @@ export default function AdminUsersPage() {
                                 description: 'Disabled accounts cannot sign in until an administrator reactivates them.',
                               }),
                           },
+                          {
+                            label: 'Delete user',
+                            icon: <Trash2 className="h-4 w-4" />,
+                            tone: 'danger',
+                            onClick: () => setDeleteUserTarget(user),
+                          },
                         ]}
                       />
                     </TD>
@@ -543,6 +565,17 @@ export default function AdminUsersPage() {
         description={confirm?.description}
         confirmLabel={confirm?.status === 'active' ? 'Activate' : 'Confirm'}
         tone={confirm?.status === 'active' ? 'default' : 'danger'}
+        loading={busy}
+      />
+
+      <ConfirmDialog
+        open={!!deleteUserTarget}
+        onClose={() => setDeleteUserTarget(null)}
+        onConfirm={deleteUser}
+        title={deleteUserTarget ? `Delete ${deleteUserTarget.fullName}?` : ''}
+        description="This disables the account permanently. Any seller store and products owned by this user will also be closed and archived, while order history is preserved."
+        confirmLabel="Delete user"
+        tone="danger"
         loading={busy}
       />
     </div>

@@ -13,6 +13,7 @@ use Shopio\Http\Request;
 use Shopio\Http\Response;
 use Shopio\Http\Router;
 use Shopio\Middleware\AuthMiddleware;
+use Shopio\Middleware\ApprovedSellerMiddleware;
 use Shopio\Middleware\BodyGuardMiddleware;
 use Shopio\Middleware\CorsMiddleware;
 use Shopio\Middleware\CsrfMiddleware;
@@ -112,6 +113,10 @@ final class Kernel
         $auth = $container->get(\Shopio\Services\AuthService::class);
         $container->instance('mw.role.admin', new RequireRoleMiddleware($auth, ['admin']));
         $container->instance('mw.role.seller', new RequireRoleMiddleware($auth, ['seller']));
+        $container->instance('mw.seller.approved', new ApprovedSellerMiddleware(
+            $auth,
+            $container->get(\Shopio\Repositories\SellerRepository::class),
+        ));
         $container->instance('mw.role.admin_or_seller', new RequireRoleMiddleware($auth, ['admin', 'seller']));
 
         $container->instance('mw.idempotency', new IdempotencyMiddleware($container->get(IdempotencyRepository::class)));

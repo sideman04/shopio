@@ -67,22 +67,34 @@ export function VariantSelector({ product, selectedVariant, onChange, className 
   const { optionTypes } = product
   if (optionTypes.length === 0) return null
 
-  const findVariant = (options: Record<string, string>) =>
-    product.variants.find((variant) =>
-      Object.entries(options).every(([key, value]) => variant.options[key] === value),
+  const optionValue = (variant: ProductVariant, name: string) => {
+    const key = Object.keys(variant.options).find(
+      (candidate) => candidate.trim().toLowerCase() === name.trim().toLowerCase(),
     )
+    return key ? variant.options[key].trim() : undefined
+  }
+
+  const matchesOptions = (variant: ProductVariant, options: Record<string, string>) =>
+    Object.entries(options).every(
+      ([key, value]) => optionValue(variant, key)?.toLowerCase() === value.trim().toLowerCase(),
+    )
+
+  const findVariant = (options: Record<string, string>) =>
+    product.variants.find((variant) => matchesOptions(variant, options))
 
   const activeOptions = selectedVariant.options
 
-  // A value is available if any variant carrying it (plus the other current
-  // selections) still has stock.
-  const isAvailable = (optionName: string, value: string) => {
+  // A value is selectable when a real variant carries it. Stock is handled
+  // separately: shoppers may inspect an out-of-stock variant, but cannot add it
+  // to the cart.
+  const hasVariant = (optionName: string, value: string) => {
     const candidateOptions = { ...activeOptions, [optionName]: value }
-    return product.variants.some(
-      (variant) =>
-        Object.entries(candidateOptions).every(([key, val]) => variant.options[key] === val) &&
-        variant.stock > 0,
-    )
+    return product.variants.some((variant) => matchesOptions(variant, candidateOptions))
+  }
+
+  const isInStock = (optionName: string, value: string) => {
+    const candidateOptions = { ...activeOptions, [optionName]: value }
+    return product.variants.some((variant) => matchesOptions(variant, candidateOptions) && variant.stock > 0)
   }
 
   return (
@@ -101,13 +113,14 @@ export function VariantSelector({ product, selectedVariant, onChange, className 
             <div className="flex flex-wrap gap-2" role="group" aria-label={option.name}>
               {option.values.map((value) => {
                 const selected = activeOptions[option.name] === value
-                const available = isAvailable(option.name, value)
+                const selectable = hasVariant(option.name, value)
+                const inStock = isInStock(option.name, value)
                 return (
                   <button
                     key={value}
                     type="button"
                     aria-pressed={selected}
-                    disabled={!available}
+                    disabled={!selectable}
                     onClick={() => {
                       const next = findVariant({ ...activeOptions, [option.name]: value })
                       if (next) onChange(next)
@@ -118,7 +131,8 @@ export function VariantSelector({ product, selectedVariant, onChange, className 
                       selected
                         ? 'border-ink bg-ink text-white'
                         : 'border-ink-200 text-ink-700 hover:border-ink-400',
-                      !available && 'cursor-not-allowed opacity-40 line-through',
+                      !selectable && 'cursor-not-allowed opacity-40 line-through',
+                      selectable && !inStock && 'opacity-60',
                     )}
                   >
                     {asSwatch && (

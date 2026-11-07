@@ -370,7 +370,7 @@ final class OrderRepository extends Repository
         $total = (int) $this->db->scalar("SELECT COUNT(*) FROM orders o WHERE {$whereSql}", $params);
 
         $rows = $this->db->select(
-            "SELECT o.id, o.order_number, o.status, o.payment_status, o.fulfillment_status, o.currency,
+            "SELECT o.id, o.user_id, o.order_number, o.status, o.payment_status, o.fulfillment_status, o.currency,
                     o.customer_name, o.customer_email, o.placed_at, o.delivered_at,
                     COALESCE(t.grand_total, 0) AS grand_total,
                     COALESCE(t.items_subtotal, 0) AS items_subtotal,
