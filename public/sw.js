@@ -14,7 +14,9 @@
  */
 
 const IS_DEV = new URL(self.location.href).searchParams.get('dev') === '1'
-const VERSION = IS_DEV ? 'shopio-dev' : 'shopio-v3'
+// Bump this whenever the deployed demo data/adapter changes so installed PWAs
+// do not keep serving an older JavaScript bundle from the static cache.
+const VERSION = IS_DEV ? 'shopio-dev' : 'shopio-v4'
 
 const STATIC_CACHE = `${VERSION}-static`
 const RUNTIME_CACHE = `${VERSION}-runtime`
