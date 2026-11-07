@@ -21,6 +21,11 @@ const keys = {
   wishlist: 'shopio.demo.wishlist',
 }
 
+function categoryImage(label: string, background: string, accent: string) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><rect width="800" height="600" fill="${background}"/><circle cx="650" cy="125" r="150" fill="${accent}" opacity=".38"/><circle cx="150" cy="525" r="190" fill="${accent}" opacity=".25"/><rect x="245" y="180" width="310" height="230" rx="24" fill="${accent}" opacity=".72"/><path d="M275 365l78-82 58 56 54-66 105 92H275z" fill="${background}" opacity=".78"/><circle cx="390" cy="245" r="25" fill="${background}" opacity=".78"/><text x="400" y="470" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="600" fill="${accent}">${label}</text></svg>`
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+}
+
 function read<T>(key: string, fallback: T): T {
   try {
     const value = localStorage.getItem(key)
@@ -36,10 +41,10 @@ function write(key: string, value: unknown) {
 
 const now = new Date().toISOString()
 const categories: Row[] = [
-  { id: 1, name: 'Furniture & Home', slug: 'furniture-home', description: 'Comfort for every room', status: 'active', sort_order: 1, product_count: 6 },
-  { id: 2, name: 'Electronics', slug: 'electronics', description: 'Smart tech for modern living', status: 'active', sort_order: 2, product_count: 6 },
-  { id: 3, name: 'Fashion & Apparel', slug: 'fashion-apparel', description: 'Everyday looks, elevated', status: 'active', sort_order: 3, product_count: 5 },
-  { id: 4, name: 'Home Decor', slug: 'home-decor', description: 'Finishing touches with character', status: 'active', sort_order: 4, product_count: 5 },
+  { id: 1, name: 'Furniture & Home', slug: 'furniture-home', description: 'Comfort for every room', image_url: categoryImage('Furniture & Home', '#e8ddd0', '#9a7550'), status: 'active', sort_order: 1 },
+  { id: 2, name: 'Electronics', slug: 'electronics', description: 'Smart tech for modern living', image_url: categoryImage('Electronics', '#e1e8e7', '#5f8584'), status: 'active', sort_order: 2 },
+  { id: 3, name: 'Fashion & Apparel', slug: 'fashion-apparel', description: 'Everyday looks, elevated', image_url: categoryImage('Fashion & Apparel', '#eadfe2', '#a46679'), status: 'active', sort_order: 3 },
+  { id: 4, name: 'Home Decor', slug: 'home-decor', description: 'Finishing touches with character', image_url: categoryImage('Home Decor', '#eee4d5', '#b18a55'), status: 'active', sort_order: 4 },
 ]
 
 const seller = { id: 1, user_id: 1, store_name: 'Demo Marketplace', store_slug: 'demo-marketplace', store_description: 'A ready-to-present Shopio store', business_category: 'Lifestyle', verification_status: 'approved', commission_rate: 10, status: 'active', created_at: now, owner_name: 'Demo Seller', owner_email: 'seller@shopio.test' }
