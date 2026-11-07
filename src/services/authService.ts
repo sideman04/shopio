@@ -2,6 +2,7 @@ import type { AuthSession, User } from '@/types'
 import { useAuthStore, type RegisterInput } from '@/context/authStore'
 import { api, errorMessage, setAuthToken } from './apiClient'
 import { mapUser } from './mappers'
+import { LOCAL_DEMO } from './localDemo'
 
 /**
  * Authentication service.
@@ -102,6 +103,15 @@ function hasSessionCookieHint(): boolean {
 
 /** Restore the cookie-backed session at application boot. */
 export async function me(): Promise<User | null> {
+  if (LOCAL_DEMO) {
+    try {
+      const response = await api.get<AuthPayload>('/auth/me')
+      if (!response.data) { useAuthStore.getState().clearSession(); useAuthStore.getState().markInitialized(); return null }
+      const user = mapUser(response.data as unknown as Record<string, unknown>)
+      useAuthStore.getState().setSession(user, 'local-demo-token', null)
+      return user
+    } catch { useAuthStore.getState().clearSession(); return null } finally { useAuthStore.getState().markInitialized() }
+  }
   // Anonymous visitors have no session cookie. Skipping the probe avoids a
   // needless 401 (and an offline request) on every first load.
   if (!hasSessionCookieHint()) {

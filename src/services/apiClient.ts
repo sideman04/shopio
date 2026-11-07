@@ -15,6 +15,8 @@
  * sent as `Authorization: Bearer …` when present. Tokens are never persisted.
  */
 
+import { LOCAL_DEMO, localRequest } from './localDemo'
+
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '/api/v1').replace(/\/$/, '')
 
 export type QueryValue = string | number | boolean | null | undefined | Array<string | number>
@@ -143,6 +145,7 @@ async function request<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<ApiEnvelope<T>> {
+  if (LOCAL_DEMO) return localRequest<T>(method.toUpperCase(), path, options.body) as Promise<ApiEnvelope<T>>
   const headers = new Headers(options.headers)
   const methodUpper = method.toUpperCase()
 
