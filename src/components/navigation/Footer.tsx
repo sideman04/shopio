@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Download, Mail, MapPin, Send } from 'lucide-react'
 import { useAuthStore, useInstallStore } from '@/context'
+import { CookieSettingsButton } from '@/components/privacy/CookieSettingsButton'
 import { Logo } from './Logo'
 
 interface FooterLink {
@@ -19,6 +20,7 @@ const COMPANY_LINKS: FooterLink[] = [
   { label: 'Shop all products', to: '/shop' },
   { label: 'Categories', to: '/categories' },
   { label: 'Privacy policy', to: '/privacy-policy' },
+  { label: 'Cookie policy', to: '/cookie-policy' },
   { label: 'Terms of service', to: '/terms' },
 ]
 
@@ -100,6 +102,11 @@ export function Footer() {
                     </Link>
                   </li>
                 ))}
+                {column.title === 'Company' && (
+                  <li>
+                    <CookieSettingsButton />
+                  </li>
+                )}
               </ul>
             </div>
           ))}

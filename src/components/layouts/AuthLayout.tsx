@@ -1,6 +1,7 @@
 import { Link, Outlet } from 'react-router-dom'
 import { ArrowLeft, ShieldCheck } from 'lucide-react'
 import { Logo } from '@/components/navigation/Logo'
+import { CookieSettingsButton } from '@/components/privacy/CookieSettingsButton'
 import { Toaster } from '@/components/ui/Toaster'
 import { PageTransition } from './PageTransition'
 
@@ -34,7 +35,10 @@ export function AuthLayout() {
 
       <footer className="border-t border-ink-200/70 py-5">
         <div className="container-page flex flex-wrap items-center justify-between gap-3 text-xs text-ink-500">
-          <p>© {new Date().getFullYear()} Shopio. All rights reserved.</p>
+          <div className="flex flex-wrap items-center gap-4">
+            <p>© {new Date().getFullYear()} Shopio. All rights reserved.</p>
+            <CookieSettingsButton className="rounded text-xs text-ink-500 underline underline-offset-2 transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/70" />
+          </div>
           <p className="inline-flex items-center gap-1.5">
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
             Sessions are issued and validated by the backend.

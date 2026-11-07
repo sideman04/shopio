@@ -71,8 +71,13 @@ export default function PrivacyPolicyPage() {
             <PolicySection number={4} title="Cookies and local storage">
               <p>
                 We use cookies and similar technologies to keep you signed in, remember your cart
-                and measure how the storefront performs. You can control cookies through your
-                browser settings; blocking essential cookies may break parts of the service.
+                and improve the storefront. Optional functional, analytics and marketing cookies
+                are used only when you allow them. Read our{' '}
+                <Link to="/cookie-policy" className="link-underline">
+                  Cookie Policy
+                </Link>
+                , or revisit your choices at any time using Cookie Settings in the footer. Blocking
+                essential cookies in your browser may break parts of the service.
               </p>
             </PolicySection>
 

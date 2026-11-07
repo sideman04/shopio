@@ -20,6 +20,7 @@ use Shopio\Controllers\CartController;
 use Shopio\Controllers\CatalogController;
 use Shopio\Controllers\CronController;
 use Shopio\Controllers\CustomerController;
+use Shopio\Controllers\CookieConsentController;
 use Shopio\Controllers\HealthController;
 use Shopio\Controllers\MediaController;
 use Shopio\Controllers\OrderController;
@@ -57,6 +58,12 @@ return static function (Router $r): void {
     $r->post('/auth/change-password', [AuthController::class, 'changePassword'], array_merge($authCsrf, ['mw.ratelimit.password']));
     $r->post('/auth/phone/verify', [AuthController::class, 'requestPhoneVerification'], $authCsrf);
     $r->post('/auth/phone/confirm', [AuthController::class, 'verifyPhone'], $authCsrf);
+
+    // --- Privacy preferences -------------------------------------------------
+    $r->post('/cookie-consents', [CookieConsentController::class, 'save'], [
+        'mw.auth.optional',
+        'mw.ratelimit.write',
+    ]);
 
     // --- Public catalogue -----------------------------------------------------
     $r->get('/products', [CatalogController::class, 'products']);

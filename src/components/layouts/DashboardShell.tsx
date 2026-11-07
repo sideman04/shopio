@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Toaster } from '@/components/ui/Toaster'
 import { SearchBar } from '@/components/navigation/SearchBar'
 import { Logo } from '@/components/navigation/Logo'
+import { CookieSettingsButton } from '@/components/privacy/CookieSettingsButton'
 import { homeRouteForRole, useActiveRole, useAuthStore } from '@/context/authStore'
 import { useUnreadCount, useNotificationsFor } from '@/context/systemStore'
 import { toast } from '@/context/uiStore'
@@ -130,6 +131,7 @@ export function DashboardShell({ roleLabel, navGroups, notificationUserId, child
         </div>
         <div className="flex-1 overflow-y-auto px-3 py-4">{navList}</div>
         <div className="border-t border-ink-200 p-3">
+          <CookieSettingsButton className="mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/70" />
           <Link
             to="/"
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink"
@@ -239,6 +241,7 @@ export function DashboardShell({ roleLabel, navGroups, notificationUserId, child
         </div>
         {navList}
         <div className="mt-6 border-t border-ink-200 pt-4">
+          <CookieSettingsButton className="mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/70" />
           <Link
             to="/"
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink"

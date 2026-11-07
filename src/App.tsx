@@ -4,6 +4,8 @@ import { AppRoutes } from '@/app/router'
 import { bootstrap } from '@/app/bootstrap'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import { NetworkStatus } from '@/components/pwa/NetworkStatus'
+import { CookieConsentManager } from '@/components/privacy/CookieConsentManager'
+import { CookieConsentProvider } from '@/context/CookieConsentContext'
 import { useAuthStore } from '@/context/authStore'
 
 /**
@@ -30,9 +32,12 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <NetworkStatus />
-      <AppRoutes />
-      <InstallPrompt />
+      <CookieConsentProvider>
+        <NetworkStatus />
+        <AppRoutes />
+        <InstallPrompt />
+        <CookieConsentManager />
+      </CookieConsentProvider>
     </BrowserRouter>
   )
 }

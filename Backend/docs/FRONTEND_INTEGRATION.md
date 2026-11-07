@@ -118,6 +118,46 @@ const { data } = await apiClient.get<{ data: Product[] }>('/products', { anonymo
 
 ---
 
+## Cookie consent and optional tracking
+
+The consent provider stores the user's versioned, non-sensitive preferences in
+browser storage so the banner does not return on every navigation. In production
+(`VITE_LOCAL_DEMO=false`), it also sends updates to `POST /cookie-consents`.
+Authenticated records are keyed by the validated server session; guest records
+use a random HttpOnly `shopio_consent_id` cookie whose SHA-256 hash is stored by
+the API. Apply `database/migrations/0004_cookie_consents.sql` before enabling
+that API endpoint. Consent is a preference, never an authorization signal.
+
+There are no analytics or marketing scripts in the app today. Never add
+optional vendor `<script>` tags to `index.html` or load them at module scope.
+Load each integration only in a component/effect that checks its category with
+`useCookieConsent()`, and tear down the vendor instance and its script when the
+category is withdrawn:
+
+```tsx
+const { hasConsent } = useCookieConsent()
+
+useEffect(() => {
+  if (!hasConsent('analytics')) return
+  const script = document.createElement('script')
+  script.src = ANALYTICS_SCRIPT_URL
+  script.async = true
+  document.head.append(script)
+  const analytics = initialiseAnalytics()
+
+  return () => {
+    analytics?.disable?.()
+    script.remove()
+  }
+}, [hasConsent])
+```
+
+Keep vendor cookies/storage and event sending disabled until the consent check
+passes; removing a script element alone does not undo code already running.
+Use the corresponding `marketing` category for advertising integrations.
+
+---
+
 ## 6. Retryable operations & idempotency
 
 For `POST /orders`, `POST /orders/{id}/payments`, `POST /orders/{id}/refunds` and

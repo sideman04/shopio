@@ -131,6 +131,7 @@ not `403`, so existence is not disclosed).
 | `GET` | `/banners`, `/stores/{slug}` | |
 | `GET` | `/countries`, `/regions`, `/cities`, `/cities/{id}` | |
 | `POST` | `/auth/register`, `/auth/login`, plus password/verification routes | Rate limited. |
+| `POST` | `/cookie-consents` | Optional authentication; validated preferences only, rate limited. Anonymous IDs are issued as HttpOnly cookies and stored hashed. |
 | `POST` | `/webhooks/payments/{provider}` | Signature-verified; see below. |
 | `POST` | `/internal/maintenance` | Requires `X-Cron-Token`. |
 | `POST` | `/support` | Optional auth; rate limited (5/hour/IP). |

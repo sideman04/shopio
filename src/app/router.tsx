@@ -32,6 +32,7 @@ import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
 import FaqPage from '@/pages/legal/FaqPage'
 import ShippingReturnsPage from '@/pages/legal/ShippingReturnsPage'
 import PrivacyPolicyPage from '@/pages/legal/PrivacyPolicyPage'
+import CookiePolicyPage from '@/pages/legal/CookiePolicyPage'
 import TermsPage from '@/pages/legal/TermsPage'
 import NotFoundPage from '@/pages/legal/NotFoundPage'
 
@@ -115,6 +116,7 @@ export function AppRoutes() {
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/shipping-returns" element={<ShippingReturnsPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/cookie-policy" element={<CookiePolicyPage />} />
         <Route path="/terms" element={<TermsPage />} />
 
         {/* Seller onboarding is public */}
