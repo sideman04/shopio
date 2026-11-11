@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Shopio trades primarily in Tanzanian Shillings (TZS) — see the backend
+ * RAGIZE trades primarily in Tanzanian Shillings (TZS) — see the backend
  * `products.currency` / `orders.currency` columns. The symbol is configurable
  * so a future multi-currency backend can switch presentation without a rewrite.
  */

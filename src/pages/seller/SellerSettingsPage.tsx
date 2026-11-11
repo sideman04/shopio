@@ -414,7 +414,7 @@ export default function SellerSettingsPage() {
             checked={notifications.marketing}
             onChange={(value) => updateNotifications('marketing', value)}
             label="Marketing emails"
-            description="Tips, campaign ideas and Shopio product updates."
+            description="Tips, campaign ideas and RAGIZE product updates."
           />
           <div className="flex justify-end border-t border-ink-200 pt-4">
             <Button

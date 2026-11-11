@@ -29,7 +29,7 @@ export function NewsletterForm({ className }: { className?: string }) {
         name: 'Newsletter subscriber',
         email: email.trim(),
         subject: 'Newsletter subscription',
-        message: 'Please add this address to the Shopio newsletter.',
+        message: 'Please add this address to the RAGIZE newsletter.',
       })
       setEmail('')
       toast.success('Subscribed', 'You will receive our latest offers and updates by email.')

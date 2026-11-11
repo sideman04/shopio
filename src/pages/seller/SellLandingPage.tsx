@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils'
 const BENEFITS = [
   {
     icon: Store,
-    title: 'Reach shoppers on Shopio',
+    title: 'Reach shoppers on RAGIZE',
     body: 'List products in the marketplace and let shoppers find them through search, categories and product collections.',
   },
   {
@@ -35,7 +35,7 @@ const BENEFITS = [
   {
     icon: Truck,
     title: 'Delivery support',
-    body: 'Use Shopio Express or ship with your own courier. Add tracking, update fulfilment and keep buyers informed from one dashboard.',
+    body: 'Use RAGIZE Express or ship with your own courier. Add tracking, update fulfilment and keep buyers informed from one dashboard.',
   },
   {
     icon: BarChart3,
@@ -123,10 +123,10 @@ export default function SellLandingPage() {
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3 py-1 text-xs font-medium text-ink-600">
               <BadgeCheck className="h-3.5 w-3.5 text-gold-500" aria-hidden="true" />
-              Selling on Shopio
+              Selling on RAGIZE
             </span>
             <h1 className="mt-5 text-3xl font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
-              Open a seller store on Shopio
+              Open a seller store on RAGIZE
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-600">
               Publish your products and use seller tools to manage inventory, orders, reviews and payouts.
@@ -173,7 +173,7 @@ export default function SellLandingPage() {
           <div className="max-w-2xl">
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Everything you need to sell online</h2>
             <p className="mt-3 text-ink-600">
-              Shopio gives small and growing businesses the same tools the big stores use — without the setup cost
+              RAGIZE gives small and growing businesses the same tools the big stores use — without the setup cost
               or a developer.
             </p>
           </div>

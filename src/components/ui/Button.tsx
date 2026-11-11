@@ -36,7 +36,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 /**
- * The single button primitive for Shopio. Prefer this over ad-hoc button
+ * The single button primitive for RAGIZE. Prefer this over ad-hoc button
  * styling so focus, hover, disabled and loading states stay consistent.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(

@@ -297,7 +297,7 @@ export default function SellerProductFormPage() {
         return
       }
       if (status !== 'draft' && !values.guidelines) {
-        toast.error('Confirm the guidelines', 'Please confirm the product meets Shopio guidelines before publishing.')
+        toast.error('Confirm the guidelines', 'Please confirm the product meets RAGIZE guidelines before publishing.')
         return
       }
 
@@ -719,7 +719,7 @@ export default function SellerProductFormPage() {
                 <legend className="text-sm font-medium text-ink">Visibility when you save</legend>
                 {[
                   { value: 'draft', label: 'Save as draft', description: 'Only visible to you.' },
-                  { value: 'pending_review', label: 'Submit for review', description: 'Shopio reviews it before it goes live.' },
+                  { value: 'pending_review', label: 'Submit for review', description: 'RAGIZE reviews it before it goes live.' },
                   { value: 'active', label: 'Publish now', description: 'Immediately visible to shoppers.' },
                 ].map((option) => (
                   <Radio
@@ -734,7 +734,7 @@ export default function SellerProductFormPage() {
 
               <div className="border-t border-ink-200 pt-4">
                 <Checkbox
-                  label="This product meets Shopio's catalogue guidelines."
+                  label="This product meets RAGIZE's catalogue guidelines."
                   description="Accurate description, genuine imagery and no prohibited items."
                   error={errors.guidelines?.message}
                   {...register('guidelines')}

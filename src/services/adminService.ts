@@ -53,6 +53,51 @@ export async function fetchOverview(): Promise<AdminOverview> {
   return mapOverview(response.data)
 }
 
+export interface MonitoringCheck {
+  key: string
+  label: string
+  status: 'healthy' | 'error'
+  detail: string
+  responseTimeMs?: number
+}
+
+export interface MonitoringFailure {
+  time: string
+  level: 'error' | 'critical'
+  summary: string
+  exception: string | null
+  source: string | null
+  requestId: string | null
+}
+
+export interface MonitoringSnapshot {
+  status: 'healthy' | 'degraded'
+  checkedAt: string
+  checks: MonitoringCheck[]
+  runtime: {
+    phpVersion: string
+    memoryUsageBytes: number
+    peakMemoryUsageBytes: number
+    memoryLimitBytes: number | null
+    loadAverage: number[] | null
+  }
+  logs: {
+    warningsLastHour: number
+    failuresLastHour: number
+    recentFailures: MonitoringFailure[]
+  }
+  responseTimeMs: number
+}
+
+export async function fetchMonitoring(): Promise<MonitoringSnapshot> {
+  const startedAt = performance.now()
+  const response = await api.get<Omit<MonitoringSnapshot, 'responseTimeMs'>>('/admin/monitoring')
+  return {
+    ...response.data,
+    responseTimeMs: Math.round((performance.now() - startedAt) * 10) / 10,
+  }
+}
+
 export interface AdminAnalytics {
   series: Array<{ label: string; revenue: number; orders: number }>
   statusBreakdown: Array<{ status: string; count: number }>

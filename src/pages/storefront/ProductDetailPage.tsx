@@ -468,7 +468,7 @@ export default function ProductDetailPage() {
                           <Avatar name={review.customerName ?? 'Customer'} src={review.customerAvatar} size="md" />
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <p className="text-sm font-semibold text-ink">{review.customerName ?? 'Shopio Customer'}</p>
+                              <p className="text-sm font-semibold text-ink">{review.customerName ?? 'RAGIZE Customer'}</p>
                               <span className="text-xs text-ink-500">{relativeTime(review.createdAt)}</span>
                             </div>
                             <Stars rating={review.rating} size="sm" className="mt-1" />

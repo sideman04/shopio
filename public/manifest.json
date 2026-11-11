@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Shopio — Modern Marketplace",
-  "short_name": "Shopio",
+  "name": "RAGIZE — Modern Marketplace",
+  "short_name": "RAGIZE",
   "description": "Shop furniture, electronics, fashion, decor and accessories from verified Tanzanian sellers.",
   "start_url": "/",
   "scope": "/",
@@ -15,19 +15,13 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-512x512.png",
+      "src": "/logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-maskable-512x512.png",
+      "src": "/logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

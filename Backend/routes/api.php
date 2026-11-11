@@ -23,6 +23,7 @@ use Shopio\Controllers\CustomerController;
 use Shopio\Controllers\CookieConsentController;
 use Shopio\Controllers\HealthController;
 use Shopio\Controllers\MediaController;
+use Shopio\Controllers\MonitoringController;
 use Shopio\Controllers\OrderController;
 use Shopio\Controllers\PaymentWebhookController;
 use Shopio\Controllers\SellerController;
@@ -165,6 +166,7 @@ return static function (Router $r): void {
 
     // --- Admin ----------------------------------------------------------------
     $r->get('/admin/overview', [AdminController::class, 'overview'], ['mw.auth', 'mw.role.admin']);
+    $r->get('/admin/monitoring', [MonitoringController::class, 'show'], ['mw.auth', 'mw.role.admin']);
     $r->get('/admin/analytics', [AdminController::class, 'analytics'], ['mw.auth', 'mw.role.admin']);
     $r->get('/admin/users', [AdminController::class, 'users'], ['mw.auth', 'mw.role.admin']);
     $r->patch('/admin/users/{id}/status', [AdminController::class, 'updateUserStatus'], $admin);

@@ -23,7 +23,7 @@ export function CookieConsentBanner() {
             Your Privacy Matters
           </h2>
           <p id="cookie-consent-description" className="mt-1.5 text-sm leading-relaxed text-ink-600">
-            Shopio uses cookies to improve your shopping experience, understand how our website performs,
+            RAGIZE uses cookies to improve your shopping experience, understand how our website performs,
             and personalise content. Essential cookies are always on; you choose whether to allow optional
             cookies.
           </p>

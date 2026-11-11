@@ -191,6 +191,12 @@ options), `/sellers/inventory` (+ `adjust`, `threshold`).
 
 ### Admin (role `admin`)
 
+`GET /admin/monitoring` returns an administrator-only snapshot of API/database
+availability, log-storage access, PHP request memory, host load averages and
+recent backend errors. It reports server log locations and request IDs, but
+does not return log context. The dashboard samples while open; it is not a
+replacement for external uptime alerts or production load testing.
+
 Overview/analytics, users (`PATCH …/{id}/status`, `PUT …/{id}/roles`), sellers
 (`PATCH /admin/sellers/{id}` verification), products (`PATCH …/{id}` moderation),
 categories, orders (`GET`, `GET {id}`, `PATCH …/{id}/status`), transactions,

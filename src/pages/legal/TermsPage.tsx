@@ -26,7 +26,7 @@ export default function TermsPage() {
       <PageHeader
         variant="storefront"
         title="Terms of service"
-        description="The rules for using Shopio as a shopper or as a seller."
+        description="The rules for using RAGIZE as a shopper or as a seller."
         breadcrumbs={<Breadcrumbs items={[{ label: 'Terms of service' }]} />}
       />
 
@@ -37,7 +37,7 @@ export default function TermsPage() {
           <div className="space-y-8">
             <PolicySection number={1} title="Acceptance of these terms">
               <p>
-                By creating an account or using Shopio, you agree to these terms. If you do not
+                By creating an account or using RAGIZE, you agree to these terms. If you do not
                 agree with them, please do not use the service. You must be old enough to enter a
                 binding contract in your jurisdiction to open an account.
               </p>
@@ -54,7 +54,7 @@ export default function TermsPage() {
 
             <PolicySection number={3} title="Buying and selling">
               <p>
-                Shopio is a marketplace that connects buyers with independent sellers. When you buy
+                RAGIZE is a marketplace that connects buyers with independent sellers. When you buy
                 an item, you enter a contract directly with the seller, who is responsible for the
                 item's description, quality and delivery. We help resolve disputes but are not the
                 seller of the goods.
@@ -72,7 +72,7 @@ export default function TermsPage() {
             <PolicySection number={5} title="Payments and fees">
               <p>
                 Prices are shown in Tanzanian Shillings and include any applicable taxes unless
-                stated otherwise. Shopio charges sellers a commission on completed sales, which is
+                stated otherwise. RAGIZE charges sellers a commission on completed sales, which is
                 deducted at settlement. Buyers pay delivery fees as shown at checkout.
               </p>
             </PolicySection>
@@ -87,7 +87,7 @@ export default function TermsPage() {
 
             <PolicySection number={7} title="Intellectual property">
               <p>
-                The Shopio name, logo and interface are owned by us or our licensors. Sellers keep
+                The RAGIZE name, logo and interface are owned by us or our licensors. Sellers keep
                 ownership of the content they upload but grant us a licence to display it on the
                 marketplace for the purpose of running the service.
               </p>
@@ -95,7 +95,7 @@ export default function TermsPage() {
 
             <PolicySection number={8} title="Limitation of liability">
               <p>
-                To the extent permitted by law, Shopio is not liable for indirect or consequential
+                To the extent permitted by law, RAGIZE is not liable for indirect or consequential
                 losses arising from your use of the marketplace. Nothing in these terms limits
                 rights that cannot be excluded under applicable consumer law.
               </p>
@@ -104,7 +104,7 @@ export default function TermsPage() {
             <PolicySection number={9} title="Changes to these terms">
               <p>
                 We may update these terms from time to time. When we make material changes we will
-                notify you in the app or by email. Continuing to use Shopio after a change means
+                notify you in the app or by email. Continuing to use RAGIZE after a change means
                 you accept the updated terms.
               </p>
             </PolicySection>

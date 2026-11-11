@@ -34,7 +34,7 @@ final class SecurityHeadersMiddleware
         $headers = self::STATIC_HEADERS;
 
         // Never advertise the runtime.
-        $headers['X-Powered-By'] = 'Shopio';
+        $headers['X-Powered-By'] = 'RAGIZE';
 
         if ($request->isSecure() && Config::bool('HSTS_ENABLED', true)) {
             $headers['Strict-Transport-Security'] = 'max-age=' . Config::int('HSTS_MAX_AGE', 31_536_000) . '; includeSubDomains';

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Shopio\Tests\Feature;
 
 use Shopio\Tests\TestCase;
+use Shopio\Tests\Support\Factory;
 
 /**
  * Ensures the kernel, database reset and HTTP pipeline are wired correctly.
@@ -20,6 +21,22 @@ final class HealthTest extends TestCase
         $this->assertEnvelope($response);
         $this->assertTrue($response->success());
         $this->assertSame('ok', $response->dataArray()['status'] ?? null);
+    }
+
+    public function test_monitoring_snapshot_is_admin_only_and_reports_runtime_signals(): void
+    {
+        $this->assertStatus(401, $this->get('/api/v1/admin/monitoring'));
+        $this->assertStatus(403, $this->get('/api/v1/admin/monitoring', [], $this->bearer(Factory::user())));
+
+        $response = $this->get('/api/v1/admin/monitoring', [], $this->bearer(Factory::admin()));
+
+        $this->assertStatus(200, $response);
+        $this->assertEnvelope($response);
+        $data = $response->dataArray();
+        $this->assertContains($data['status'] ?? null, ['healthy', 'degraded']);
+        $this->assertArrayHasKey('database', array_column($data['checks'] ?? [], null, 'key'));
+        $this->assertArrayHasKey('memoryUsageBytes', $data['runtime'] ?? []);
+        $this->assertArrayHasKey('failuresLastHour', $data['logs'] ?? []);
     }
 
     public function test_unknown_route_returns_404_envelope(): void

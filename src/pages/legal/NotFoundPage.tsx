@@ -6,7 +6,7 @@ const quickLinks = [
   {
     to: '/shop',
     label: 'Shop',
-    description: 'Browse every product on Shopio.',
+    description: 'Browse every product on RAGIZE.',
     icon: ShoppingBag,
   },
   {

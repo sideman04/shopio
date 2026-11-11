@@ -1,5 +1,5 @@
 /**
- * Shopio API client.
+ * RAGIZE API client.
  *
  * Every network call in the storefront, seller workspace and admin console goes
  * through this module. It targets the versioned PHP API (`/api/v1`) and speaks
@@ -195,7 +195,7 @@ async function request<T>(
       throw new ApiError('The request timed out. Please try again.', 0)
     }
     throw new ApiError(
-      'We could not reach Shopio. Check your connection and try again.',
+      'We could not reach RAGIZE. Check your connection and try again.',
       0,
       {},
       null,

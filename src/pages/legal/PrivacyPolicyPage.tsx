@@ -26,7 +26,7 @@ export default function PrivacyPolicyPage() {
       <PageHeader
         variant="storefront"
         title="Privacy policy"
-        description="What information Shopio collects, why we collect it, and the choices you have."
+        description="What information RAGIZE collects, why we collect it, and the choices you have."
         breadcrumbs={<Breadcrumbs items={[{ label: 'Privacy policy' }]} />}
       />
 
@@ -64,7 +64,7 @@ export default function PrivacyPolicyPage() {
               </p>
               <p>
                 We do not sell your personal information. We may disclose it when the law requires
-                it or to protect the rights and safety of Shopio, our users and the public.
+                it or to protect the rights and safety of RAGIZE, our users and the public.
               </p>
             </PolicySection>
 

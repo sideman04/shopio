@@ -105,7 +105,7 @@ const SECTION_KEYS: Record<keyof SettingsState, string[]> = {
 
 const DEFAULTS: SettingsState = {
   general: {
-    siteName: 'Shopio',
+    siteName: 'RAGIZE',
     supportEmail: 'support@shopio.co.tz',
     supportPhone: '+255 700 000 001',
     currency: 'TZS',
@@ -122,9 +122,9 @@ const DEFAULTS: SettingsState = {
   shipping: {
     freeShippingThreshold: '150000',
     flatShippingFee: '12000',
+    carrier: 'RAGIZE Express',
     vatRate: '18',
     taxInclusive: true,
-    carrier: 'Shopio Express',
   },
   emails: {
     orderConfirmation: true,
@@ -132,7 +132,7 @@ const DEFAULTS: SettingsState = {
     deliveryConfirmation: true,
     welcomeEmail: true,
     abandonedCart: false,
-    fromName: 'Shopio',
+    fromName: 'RAGIZE',
     replyTo: 'no-reply@shopio.co.tz',
   },
   payments: {

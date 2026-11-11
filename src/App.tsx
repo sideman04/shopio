@@ -24,7 +24,7 @@ export default function App() {
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-ink-200 border-t-ink" />
-          <p className="mt-4 text-sm text-ink-500">Loading Shopio…</p>
+          <p className="mt-4 text-sm text-ink-500">Loading RAGIZE…</p>
         </div>
       </div>
     )

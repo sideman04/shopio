@@ -28,7 +28,7 @@ export function InstallPrompt() {
 
   const description = !isSecure ? (
     <>
-      Installation needs a secure connection. Open Shopio over <strong>HTTPS</strong> on your phone,
+      Installation needs a secure connection. Open RAGIZE over <strong>HTTPS</strong> on your phone,
       then add it to your home screen.
     </>
   ) : isIos ? (
@@ -37,7 +37,7 @@ export function InstallPrompt() {
       choose <strong>Add to Home Screen</strong>.
     </>
   ) : canInstall ? (
-    <>Add Shopio to your home screen for faster access and offline browsing.</>
+    <>Add RAGIZE to your home screen for faster access and offline browsing.</>
   ) : (
     <>Open your browser menu and choose “Install app” or “Add to Home Screen”.</>
   )
@@ -51,7 +51,7 @@ export function InstallPrompt() {
     >
       <div
         role="region"
-        aria-label="Install Shopio"
+        aria-label="Install RAGIZE"
         aria-live="polite"
         className="relative flex items-start gap-3 rounded-xl border border-ink-200 bg-white p-4 pr-10 shadow-lift animate-slide-up"
       >
@@ -64,7 +64,7 @@ export function InstallPrompt() {
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-ink">Install Shopio</p>
+          <p className="text-sm font-semibold text-ink">Install RAGIZE</p>
           <p className="mt-1 text-xs leading-relaxed text-ink-500">{description}</p>
 
           <div className="mt-3 flex items-center gap-2">

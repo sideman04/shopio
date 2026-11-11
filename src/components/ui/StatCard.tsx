@@ -16,7 +16,7 @@ interface StatCardProps {
 
 /**
  * Headline metric tile used across all three dashboards. Deliberately plain —
- * no gradients — to match the Shopio visual language.
+ * no gradients — to match the RAGIZE visual language.
  */
 export function StatCard({
   label,

@@ -1,5 +1,5 @@
 /*
- * Shopio service worker.
+ * RAGIZE service worker.
  *
  * Production: precaches the app shell and serves static assets cache-first so
  * the storefront opens offline. Navigations are network-first so published
@@ -16,7 +16,7 @@
 const IS_DEV = new URL(self.location.href).searchParams.get('dev') === '1'
 // Bump this whenever the deployed demo data/adapter changes so installed PWAs
 // do not keep serving an older JavaScript bundle from the static cache.
-const VERSION = IS_DEV ? 'shopio-dev' : 'shopio-v4'
+const VERSION = IS_DEV ? 'ragize-dev' : 'ragize-v5'
 
 const STATIC_CACHE = `${VERSION}-static`
 const RUNTIME_CACHE = `${VERSION}-runtime`
@@ -70,7 +70,7 @@ async function precacheAppShell() {
       try {
         await cache.add(url)
       } catch (error) {
-        console.warn('[Shopio SW] Could not precache:', url, error)
+        console.warn('[RAGIZE SW] Could not precache:', url, error)
       }
     }),
   )
@@ -86,7 +86,7 @@ async function precacheAppShell() {
       try {
         await cache.add(assetUrl)
       } catch (error) {
-        console.warn('[Shopio SW] Could not precache asset:', assetUrl, error)
+        console.warn('[RAGIZE SW] Could not precache asset:', assetUrl, error)
       }
     }),
   )
@@ -109,7 +109,7 @@ async function precachePublicApi() {
         })
         if (response.ok) await cache.put(url, response)
       } catch (error) {
-        console.info('[Shopio SW] API precache skipped:', url, error)
+        console.info('[RAGIZE SW] API precache skipped:', url, error)
       }
     }),
   )
@@ -141,7 +141,7 @@ self.addEventListener('install', (event) => {
         results.forEach((result) => {
           if (result.status === 'rejected') {
             // A single missing asset must not block the rest of the install.
-            console.warn('[Shopio SW] Precache failed:', result.reason)
+            console.warn('[RAGIZE SW] Precache failed:', result.reason)
           }
         })
       })
@@ -402,7 +402,7 @@ function offlineResponse() {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Shopio — You are offline</title>
+    <title>RAGIZE — You are offline</title>
     <style>
       :root { color-scheme: light; }
       * { box-sizing: border-box; }
@@ -433,9 +433,9 @@ function offlineResponse() {
   </head>
   <body>
     <main>
-      <div class="mark" aria-hidden="true">S</div>
+      <div class="mark" aria-hidden="true">R</div>
       <h1>You are offline</h1>
-      <p>Shopio could not reach the network. Check your connection and try again — previously visited pages are still available.</p>
+      <p>RAGIZE could not reach the network. Check your connection and try again — previously visited pages are still available.</p>
       <button type="button" onclick="window.location.reload()">Try again</button>
     </main>
   </body>

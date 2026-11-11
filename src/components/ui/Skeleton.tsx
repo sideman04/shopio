@@ -76,7 +76,7 @@ export function Spinner({ className, label = 'Loading' }: { className?: string; 
   )
 }
 
-export function FullPageLoader({ label = 'Loading Shopio…' }: { label?: string }) {
+export function FullPageLoader({ label = 'Loading RAGIZE…' }: { label?: string }) {
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3" role="status">
       <Spinner className="h-6 w-6" />

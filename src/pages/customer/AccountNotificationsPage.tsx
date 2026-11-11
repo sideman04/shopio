@@ -167,7 +167,7 @@ export default function AccountNotificationsPage() {
       )}
 
       <p className="text-xs text-ink-500">
-        Notifications are delivered by Shopio and kept in your account.
+        Notifications are delivered by RAGIZE and kept in your account.
       </p>
     </div>
   )

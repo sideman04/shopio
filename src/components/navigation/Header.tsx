@@ -174,7 +174,7 @@ export function Header() {
                     : [
                         { label: 'Sign in', to: '/login', icon: <User className="h-4 w-4" /> },
                         { label: 'Create an account', to: '/register' },
-                        { label: 'Sell on Shopio', to: '/sell', icon: <Store className="h-4 w-4" />, divider: true },
+                        { label: 'Sell on RAGIZE', to: '/sell', icon: <Store className="h-4 w-4" />, divider: true },
                       ]
                 }
               />

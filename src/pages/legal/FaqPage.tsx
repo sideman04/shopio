@@ -80,7 +80,7 @@ export default function FaqPage() {
 
             <section aria-labelledby="faq-selling" className="space-y-4">
               <h2 id="faq-selling" className="text-lg font-semibold">
-                Selling on Shopio
+                Selling on RAGIZE
               </h2>
               <p className="text-sm text-ink-600">
                 Thinking of opening a store? These cover the essentials for sellers.

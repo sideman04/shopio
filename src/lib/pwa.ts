@@ -1,5 +1,5 @@
 /**
- * Registers the Shopio service worker.
+ * Registers the RAGIZE service worker.
  *
  * Production builds cache the app shell and static assets for offline use.
  * Development registers the same worker with `?dev=1`, which stays
@@ -13,7 +13,7 @@ export function registerServiceWorker(): void {
 
   if (!window.isSecureContext) {
     console.warn(
-      '[Shopio PWA] Service workers require HTTPS or localhost. Install prompts are unavailable on this origin.',
+      '[RAGIZE PWA] Service workers require HTTPS or localhost. Install prompts are unavailable on this origin.',
     )
     return
   }
@@ -24,7 +24,7 @@ export function registerServiceWorker(): void {
     navigator.serviceWorker
       .register(swUrl, { scope: '/' })
       .then((registration) => {
-        console.info('[Shopio PWA] Service worker registered:', registration.scope)
+        console.info('[RAGIZE PWA] Service worker registered:', registration.scope)
 
         registration.addEventListener('updatefound', () => {
           const installing = registration.installing
@@ -32,13 +32,13 @@ export function registerServiceWorker(): void {
 
           installing.addEventListener('statechange', () => {
             if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-              console.info('[Shopio PWA] A new version is ready. Reload to update.')
+              console.info('[RAGIZE PWA] A new version is ready. Reload to update.')
             }
           })
         })
       })
       .catch((error: unknown) => {
-        console.error('[Shopio PWA] Service worker registration failed:', error)
+        console.error('[RAGIZE PWA] Service worker registration failed:', error)
       })
   }
 

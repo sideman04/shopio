@@ -1,9 +1,9 @@
 {
-  "name": "shopio",
+  "name": "ragize",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Shopio - Multi-role e-commerce marketplace frontend (React + Vite + Tailwind).",
+  "description": "RAGIZE - Multi-role e-commerce marketplace frontend (React + Vite + Tailwind).",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

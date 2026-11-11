@@ -98,8 +98,8 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
             policy_version: COOKIE_CONSENT_POLICY_VERSION,
           })
           .catch((error: unknown) => {
-            console.error('Unable to sync cookie preferences with Shopio.', error)
-            setSaveError('Your preferences are saved on this device, but could not be synced to Shopio.')
+            console.error('Unable to sync cookie preferences with RAGIZE.', error)
+            setSaveError('Your preferences are saved on this device, but could not be synced to RAGIZE.')
           })
       }
     } catch (error) {

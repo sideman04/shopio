@@ -79,6 +79,7 @@ import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage'
 import AdminBannersPage from '@/pages/admin/AdminBannersPage'
 import AdminSettingsPage from '@/pages/admin/AdminSettingsPage'
 import AdminActivityPage from '@/pages/admin/AdminActivityPage'
+import AdminMonitoringPage from '@/pages/admin/AdminMonitoringPage'
 
 /**
  * Application routes.
@@ -181,6 +182,7 @@ export function AppRoutes() {
         <Route path="banners" element={<AdminBannersPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="activity" element={<AdminActivityPage />} />
+        <Route path="monitoring" element={<AdminMonitoringPage />} />
       </Route>
     </Routes>
   )

@@ -10,7 +10,7 @@ const VALUES = [
   {
     icon: Store,
     title: 'Independent stores',
-    description: 'Browse products from independent sellers across the Shopio marketplace.',
+    description: 'Browse products from independent sellers across the RAGIZE marketplace.',
   },
   {
     icon: Search,
@@ -29,7 +29,7 @@ const VALUES = [
   },
 ]
 
-/** About page: the Shopio story and marketplace values. */
+/** About page: the RAGIZE story and marketplace values. */
 export default function AboutPage() {
   return (
     <div className="pb-16">
@@ -43,7 +43,7 @@ export default function AboutPage() {
                 A marketplace built for Tanzanian buyers and sellers
               </h1>
               <p className="mt-4 max-w-xl text-sm leading-relaxed text-ink-600">
-                Shopio brings shoppers and independent stores together in one place. Browse furniture,
+                RAGIZE brings shoppers and independent stores together in one place. Browse furniture,
                 electronics, fashion, home decor and accessories, then manage saved items and orders from
                 your account.
               </p>
@@ -61,15 +61,15 @@ export default function AboutPage() {
               src={imgWide(PHOTOS.furniture[2], 1000)}
               alt=""
               wrapperClassName="aspect-[4/3]"
-              fallbackLabel="Shopio"
+              fallbackLabel="RAGIZE"
             />
           </div>
         </div>
       </div>
 
-      <section className="container-page pt-10 sm:pt-12" aria-label="Inside Shopio">
+      <section className="container-page pt-10 sm:pt-12" aria-label="Inside RAGIZE">
         <SectionHeading
-          eyebrow="Inside Shopio"
+          eyebrow="Inside RAGIZE"
           title="One marketplace, useful tools"
         />
         <ul className="grid gap-6 sm:grid-cols-2">
@@ -92,7 +92,7 @@ export default function AboutPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-500">For sellers</p>
             <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
-              Bring your products to Shopio
+              Bring your products to RAGIZE
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-600">
               Create a seller account, publish your catalogue, and manage inventory and orders in your dashboard.

@@ -17,7 +17,7 @@ const categories = [
   {
     key: 'analytics',
     title: 'Analytics',
-    description: 'Helps us understand site usage and improve the speed and performance of Shopio.',
+    description: 'Helps us understand site usage and improve the speed and performance of RAGIZE.',
   },
   {
     key: 'marketing',
@@ -43,7 +43,7 @@ export function CookiePreferenceModal() {
       open={preferencesOpen}
       onClose={closePreferences}
       title="Cookie preferences"
-      description="Choose which optional cookies Shopio may use. You can change these choices at any time."
+      description="Choose which optional cookies RAGIZE may use. You can change these choices at any time."
       size="lg"
       className="max-h-[92dvh]"
       footer={

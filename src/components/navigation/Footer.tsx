@@ -51,7 +51,7 @@ export function Footer() {
   const columns: Array<{ title: string; links: FooterLink[] }> = [
     { title: 'Customer Support', links: supportLinks },
     { title: 'Company', links: COMPANY_LINKS },
-    { title: 'Sell on Shopio', links: sellerLinks },
+    { title: 'Sell on RAGIZE', links: sellerLinks },
   ]
 
   return (
@@ -61,7 +61,7 @@ export function Footer() {
           <div>
             <Logo />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-500">
-              Shopio is a multi-vendor marketplace connecting Tanzanian shoppers with independent local
+              RAGIZE is a multi-vendor marketplace connecting Tanzanian shoppers with independent local
               sellers of furniture, electronics, fashion, decor and accessories.
             </p>
 
@@ -114,7 +114,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col gap-4 border-t border-ink-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-ink-500">
-            © {new Date().getFullYear()} Shopio. All rights reserved.
+            © {new Date().getFullYear()} RAGIZE. All rights reserved.
           </p>
           <p className="inline-flex items-center gap-2 text-xs text-ink-500">
             <Send className="h-3.5 w-3.5" aria-hidden="true" />

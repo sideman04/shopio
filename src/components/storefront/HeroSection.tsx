@@ -32,7 +32,7 @@ export function HeroSection({ banner }: { banner?: Banner | null }) {
           <div className="order-1 py-2 lg:py-8">
             <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-gold-400">
               <span className="h-px w-8 bg-gold-400" aria-hidden="true" />
-              Shopio marketplace
+              RAGIZE marketplace
             </p>
 
             <h1 className="mt-4 max-w-xl text-[34px] font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-[58px]">
@@ -66,7 +66,7 @@ export function HeroSection({ banner }: { banner?: Banner | null }) {
               <SmartImage
                 src={imageUrl}
                 alt={title}
-                fallbackLabel="Shopio marketplace"
+                fallbackLabel="RAGIZE marketplace"
                 wrapperClassName="h-[250px] w-full bg-ink-800 sm:h-[340px] lg:h-[390px]"
                 loadingClassName="bg-ink-800"
                 loading="eager"

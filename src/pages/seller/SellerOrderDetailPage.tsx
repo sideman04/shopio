@@ -366,7 +366,7 @@ export default function SellerOrderDetailPage() {
         open={noteOpen}
         onClose={() => setNoteOpen(false)}
         title="Add internal note"
-        description="Only visible to you and Shopio staff."
+        description="Only visible to you and RAGIZE staff."
         footer={
           <>
             <Button variant="outline" onClick={() => setNoteOpen(false)}>

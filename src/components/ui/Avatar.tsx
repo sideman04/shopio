@@ -20,7 +20,7 @@ const SIZES = {
 export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
   return (
     <img
-      src={src || avatarUrl(name || 'Shopio User')}
+      src={src || avatarUrl(name || 'RAGIZE User')}
       alt={name}
       title={name}
       className={cn('shrink-0 rounded-full bg-ink-100 object-cover', SIZES[size], className)}

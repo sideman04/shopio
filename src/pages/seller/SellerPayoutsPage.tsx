@@ -34,7 +34,7 @@ const METHOD_OPTIONS = [
 
 function downloadStatement(payout: SellerPayout) {
   const lines = [
-    'Shopio payout statement',
+    'RAGIZE payout statement',
     '========================',
     `Reference: ${payout.payoutReference}`,
     `Amount: ${formatCurrency(payout.amount)}`,
@@ -278,7 +278,7 @@ export default function SellerPayoutsPage() {
             <div>
               <p className="font-medium text-ink">Commission</p>
               <p className="mt-0.5">
-                Shopio's {seller?.commissionRate ?? 0}% commission is already deducted from the balance
+                RAGIZE's {seller?.commissionRate ?? 0}% commission is already deducted from the balance
                 shown.
               </p>
             </div>

@@ -402,7 +402,7 @@ export default function AdminUsersPage() {
                             label: 'Contact by email',
                             icon: <Send className="h-4 w-4" />,
                             onClick: () => {
-                              window.location.href = `mailto:${encodeURIComponent(user.email)}?subject=${encodeURIComponent('Shopio account')}`
+                              window.location.href = `mailto:${encodeURIComponent(user.email)}?subject=${encodeURIComponent('RAGIZE account')}`
                             },
                           },
                           ...(user.status !== 'active'

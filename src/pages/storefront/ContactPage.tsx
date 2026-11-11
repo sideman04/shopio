@@ -18,7 +18,7 @@ interface ContactForm {
 const SUBJECTS = [
   { label: 'Order or delivery question', value: 'order' },
   { label: 'Returns and refunds', value: 'returns' },
-  { label: 'Selling on Shopio', value: 'seller' },
+  { label: 'Selling on RAGIZE', value: 'seller' },
   { label: 'Technical issue', value: 'technical' },
   { label: 'Something else', value: 'other' },
 ]
@@ -72,7 +72,7 @@ export default function ContactPage() {
           <Breadcrumbs items={[{ label: 'Contact' }]} />
           <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">Contact us</h1>
           <p className="mt-2 max-w-2xl text-sm text-ink-600">
-            Questions about an order, a return or selling on Shopio? Send us a message and our team will get
+            Questions about an order, a return or selling on RAGIZE? Send us a message and our team will get
             back to you. For instant answers, try the help centre first.
           </p>
         </div>

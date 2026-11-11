@@ -47,7 +47,7 @@ const categories: Row[] = [
   { id: 4, name: 'Home Decor', slug: 'home-decor', description: 'Finishing touches with character', image_url: categoryImage('Home Decor', '#eee4d5', '#b18a55'), status: 'active', sort_order: 4 },
 ]
 
-const seller = { id: 1, user_id: 1, store_name: 'Demo Marketplace', store_slug: 'demo-marketplace', store_description: 'A ready-to-present Shopio store', business_category: 'Lifestyle', verification_status: 'approved', commission_rate: 10, status: 'active', created_at: now, owner_name: 'Demo Seller', owner_email: 'seller@shopio.test' }
+const seller = { id: 1, user_id: 1, store_name: 'Demo Marketplace', store_slug: 'demo-marketplace', store_description: 'A ready-to-present RAGIZE store', business_category: 'Lifestyle', verification_status: 'approved', commission_rate: 10, status: 'active', created_at: now, owner_name: 'Demo Seller', owner_email: 'seller@shopio.test' }
 
 const photoSets = [PHOTOS.furniture, PHOTOS.electronics, PHOTOS.fashion, PHOTOS['home-decor']]
 const names = [
@@ -67,9 +67,9 @@ const products: Row[] = names.map((name, index) => {
   const price = prices[index]
   return {
     id, seller_id: 1, category_id: categoryIndex + 1, name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-    short_description: 'A thoughtfully selected demo product for your Shopio store.',
+    short_description: 'A thoughtfully selected demo product for your RAGIZE store.',
     description: 'A beautiful, practical product with a polished presentation. This sample record is stored locally for your demonstration.',
-    brand: 'Shopio Select', condition_type: 'new', status: 'active', currency: 'TZS', created_at: now, updated_at: now,
+    brand: 'RAGIZE Select', condition_type: 'new', status: 'active', currency: 'TZS', created_at: now, updated_at: now,
     category_name: categories[categoryIndex].name, category_slug: categories[categoryIndex].slug, seller_name: seller.store_name, seller_slug: seller.store_slug,
     primary_image: imgCard(photo), rating: 4.5 - (index % 3) * 0.2, review_count: 12 + index * 3, sold_count: 18 + index * 7,
     min_price: price, max_price: price, available_stock: 12 + index, variant_count: 1,
@@ -95,7 +95,7 @@ export async function localRequest<T>(method: string, path: string, body?: unkno
     const isSeller = Boolean(input.store_name)
     const user = { id: 1, full_name: input.full_name || 'Demo Customer', email: input.email || 'demo@shopio.test', phone: input.phone || '+255 700 000 000', roles: isSeller ? ['customer', 'seller', 'admin'] : ['customer', 'seller', 'admin'], status: 'active', email_verified_at: now, created_at: now, seller_id: 1 }
     write(keys.user, user)
-    return envelope({ user, token: 'local-demo-token', expiresAt: new Date(Date.now() + 86400000).toISOString() } as T, 'Welcome to Shopio demo mode')
+    return envelope({ user, token: 'local-demo-token', expiresAt: new Date(Date.now() + 86400000).toISOString() } as T, 'Welcome to RAGIZE demo mode')
   }
   if (path === '/auth/me') {
     const user = currentUser(); if (!user) return envelope(null as T)
@@ -122,7 +122,7 @@ export async function localRequest<T>(method: string, path: string, body?: unkno
   if (path.startsWith('/products/')) { const product = products.find((item) => item.slug === decodeURIComponent(path.slice('/products/'.length))); return envelope((product ?? null) as T) }
   if (path === '/categories') return envelope(categories as T)
   if (path.startsWith('/categories/')) return envelope((categories.find((item) => item.slug === decodeURIComponent(path.split('/').pop() || '')) ?? null) as T)
-  if (path === '/banners') return envelope([{ id: 1, title: 'Thoughtful pieces for everyday living', subtitle: 'Discover the Shopio demo collection', image_url: imgWide(PHOTOS.furniture[2]), button_text: 'Shop now', target_url: '/shop', placement: 'home_hero', status: 'active', sort_order: 1 }] as T)
+  if (path === '/banners') return envelope([{ id: 1, title: 'Thoughtful pieces for everyday living', subtitle: 'Discover the RAGIZE demo collection', image_url: imgWide(PHOTOS.furniture[2]), button_text: 'Shop now', target_url: '/shop', placement: 'home_hero', status: 'active', sort_order: 1 }] as T)
   if (path === '/sellers/store' || path.startsWith('/stores/')) return envelope(seller as T)
   if (path === '/cart' || path === '/cart/items' || path.startsWith('/cart/items/')) {
     let items = cartRows()

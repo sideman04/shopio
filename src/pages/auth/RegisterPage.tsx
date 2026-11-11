@@ -61,7 +61,7 @@ export default function RegisterPage() {
       const session = useAuthStore.getState().session
       if (session) {
         await cartService.mergeGuestCart()
-        toast.success('Account created', 'Welcome to Shopio.')
+        toast.success('Account created', 'Welcome to RAGIZE.')
         navigate('/account', { replace: true })
       } else {
         toast.success('Account created', 'Check your email to verify your address, then sign in.')
@@ -79,7 +79,7 @@ export default function RegisterPage() {
           <div className="space-y-1.5">
             <h1 className="text-xl font-bold tracking-tight">Create your account</h1>
             <p className="text-sm text-ink-500">
-              Join Shopio to track orders, save favourites and check out faster.
+              Join RAGIZE to track orders, save favourites and check out faster.
             </p>
           </div>
 
@@ -195,7 +195,7 @@ export default function RegisterPage() {
 
             <div className="space-y-2">
               <Checkbox
-                label="I agree to Shopio's terms and privacy policy."
+                label="I agree to RAGIZE's terms and privacy policy."
                 error={errors.agree?.message}
                 {...register('agree', {
                   validate: (value) => value || 'Please accept the terms to continue',
@@ -220,7 +220,7 @@ export default function RegisterPage() {
           </form>
 
           <p className="text-sm text-ink-600">
-            Want to sell on Shopio?{' '}
+            Want to sell on RAGIZE?{' '}
             <Link to="/seller/register" className="font-medium text-ink link-underline">
               Register as a seller
             </Link>

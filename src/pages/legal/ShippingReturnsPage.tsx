@@ -18,12 +18,12 @@ import { Clock, MapPin, PackageX, RotateCcw, Truck, Wallet } from 'lucide-react'
 
 const deliveryRows = [
   {
-    option: 'Shopio Express — Dar es Salaam',
+    option: 'RAGIZE Express — Dar es Salaam',
     time: '1–2 working days',
     cost: formatCurrency(25000),
   },
   {
-    option: 'Shopio Express — other regions',
+    option: 'RAGIZE Express — other regions',
     time: '3–7 working days',
     cost: formatCurrency(25000),
   },

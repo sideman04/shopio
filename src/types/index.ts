@@ -1,5 +1,5 @@
 /**
- * Shopio domain types.
+ * RAGIZE domain types.
  *
  * These mirror the PHP/MySQL schema (`shopio` v2 normalized) so that the
  * service layer in `src/services` can map real REST responses without

@@ -36,7 +36,7 @@ export function AuthLayout() {
       <footer className="border-t border-ink-200/70 py-5">
         <div className="container-page flex flex-wrap items-center justify-between gap-3 text-xs text-ink-500">
           <div className="flex flex-wrap items-center gap-4">
-            <p>© {new Date().getFullYear()} Shopio. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} RAGIZE. All rights reserved.</p>
             <CookieSettingsButton className="rounded text-xs text-ink-500 underline underline-offset-2 transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/70" />
           </div>
           <p className="inline-flex items-center gap-1.5">

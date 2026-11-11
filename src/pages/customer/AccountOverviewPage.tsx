@@ -84,7 +84,7 @@ export default function AccountOverviewPage() {
     <div className="space-y-6">
       <PageHeader
         title={`Welcome back, ${firstName}`}
-        description="Here is a snapshot of your orders, saved items and recent activity on Shopio."
+        description="Here is a snapshot of your orders, saved items and recent activity on RAGIZE."
         actions={
           <Button to="/shop" variant="primary">
             Continue shopping

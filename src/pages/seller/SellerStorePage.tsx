@@ -160,7 +160,7 @@ export default function SellerStorePage() {
     <div className="space-y-6">
       <PageHeader
         title="Store profile"
-        description="How your store appears to shoppers across Shopio."
+        description="How your store appears to shoppers across RAGIZE."
         actions={
           <>
             <Button

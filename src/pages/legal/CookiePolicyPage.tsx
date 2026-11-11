@@ -30,16 +30,16 @@ export default function CookiePolicyPage() {
       <PageHeader
         variant="storefront"
         title="Cookie policy"
-        description="How cookies help Shopio work, and how you can manage your choices."
+        description="How cookies help RAGIZE work, and how you can manage your choices."
         breadcrumbs={<Breadcrumbs items={[{ label: 'Cookie policy' }]} />}
       />
 
       <div className="container-page py-10 sm:py-12">
         <article className="mx-auto max-w-3xl space-y-8 text-sm leading-relaxed text-ink-600">
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-ink">How Shopio uses cookies</h2>
+            <h2 className="text-lg font-semibold text-ink">How RAGIZE uses cookies</h2>
             <p>
-              Cookies are small files saved by your browser. Shopio uses strictly necessary cookies
+              Cookies are small files saved by your browser. RAGIZE uses strictly necessary cookies
               to provide core marketplace features. Optional cookies can help remember preferences,
               improve our service and measure marketing, but remain off unless you choose to enable
               them.
@@ -61,7 +61,7 @@ export default function CookiePolicyPage() {
             <p>
               Your optional cookie choices are saved in this browser and can be changed at any time.
               You can also use your browser settings to remove or block cookies. Blocking necessary
-              cookies may prevent some parts of Shopio from working correctly.
+              cookies may prevent some parts of RAGIZE from working correctly.
             </p>
             <CookieSettingsButton className="rounded-lg border border-ink-300 px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink hover:bg-ink-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/70" />
           </section>

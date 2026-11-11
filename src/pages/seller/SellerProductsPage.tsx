@@ -331,7 +331,7 @@ export default function SellerProductsPage() {
               title={products.length === 0 ? 'No products yet' : 'No products match your filters'}
               description={
                 products.length === 0
-                  ? 'Add your first product to start selling on Shopio.'
+                  ? 'Add your first product to start selling on RAGIZE.'
                   : 'Try adjusting your search or filters.'
               }
               action={products.length === 0 ? { label: 'Add product', to: '/seller/products/new' } : undefined}

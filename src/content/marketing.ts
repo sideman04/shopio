@@ -17,7 +17,7 @@ export const businessCategories = [
 ]
 
 /** Couriers a seller can nominate when fulfilling an order. */
-export const shippingCarriers = ['Shopio Express', 'Coastal Freight', 'Nationwide Couriers']
+export const shippingCarriers = ['RAGIZE Express', 'Coastal Freight', 'Nationwide Couriers']
 
 /** Help-centre copy shared by `/faq` and the seller onboarding page. */
 export const generalFaqs = [
@@ -29,7 +29,7 @@ export const generalFaqs = [
   {
     question: 'What payment methods are accepted?',
     answer:
-      'Shopio supports mobile money (M-Pesa, Tigo Pesa, Airtel Money), major debit and credit cards, and bank transfer. Available methods are confirmed by the payment provider at checkout.',
+      'RAGIZE supports mobile money (M-Pesa, Tigo Pesa, Airtel Money), major debit and credit cards, and bank transfer. Available methods are confirmed by the payment provider at checkout.',
   },
   {
     question: 'Can I return an item?',
@@ -55,7 +55,7 @@ export const generalFaqs = [
 
 export const sellerFaqs = [
   {
-    question: 'What does it cost to sell on Shopio?',
+    question: 'What does it cost to sell on RAGIZE?',
     answer:
       'Your store’s current commission and payout details are provided during approval and shown in your seller account.',
   },
@@ -72,11 +72,11 @@ export const sellerFaqs = [
   {
     question: 'Who handles delivery?',
     answer:
-      'You can use Shopio Express or your own courier. If you ship yourself, mark the order as shipped and add the tracking number.',
+      'You can use RAGIZE Express or your own courier. If you ship yourself, mark the order as shipped and add the tracking number.',
   },
   {
     question: 'How do I get verified?',
     answer:
-      'Submit your store application and the requested business details. Shopio will contact you if more information is needed.',
+      'Submit your store application and the requested business details. RAGIZE will contact you if more information is needed.',
   },
 ]

@@ -1,4 +1,4 @@
-# Shopio
+# RAGIZE
 
 A multi-role e-commerce marketplace — customer storefront, seller dashboard and admin console —
 built with **React + Vite + TypeScript + Tailwind CSS** and backed by a **PHP REST API + MariaDB**
@@ -105,7 +105,7 @@ public/           PWA manifest, service worker and icons
 
 ## PWA (installable app + offline shell)
 
-Shopio ships as a Progressive Web App:
+RAGIZE ships as a Progressive Web App:
 
 | File | Purpose |
 | --- | --- |
@@ -217,4 +217,4 @@ errors. No secrets or credentials are stored in the frontend.
 Product photography is loaded from Unsplash and the backend media directory; a branded fallback is
 shown if an image fails. Payments use the local sandbox provider — no real charge is made. Email
 delivery is written to the backend log unless SMTP is configured.
-# shopio
+# RAGIZE

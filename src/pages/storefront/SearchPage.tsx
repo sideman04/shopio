@@ -68,7 +68,7 @@ export default function SearchPage() {
         <div className="container-page py-8 sm:py-10">
           <Breadcrumbs items={[{ label: 'Search' }]} />
           <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">
-            {q ? `Search results for “${q}”` : 'Search Shopio'}
+            {q ? `Search results for “${q}”` : 'Search RAGIZE'}
           </h1>
           <p className="mt-2 text-sm text-ink-600">
             {loading ? 'Searching…' : `${formatNumber(total)} matching product${total === 1 ? '' : 's'}`}

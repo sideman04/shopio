@@ -73,7 +73,7 @@ export default function HomePage() {
       {/* ------------------------------ Categories ---------------------------- */}
       <section className="container-page pt-10 sm:pt-12" aria-labelledby="top-categories">
         <SectionHeading
-          eyebrow="Explore Shopio"
+          eyebrow="Explore RAGIZE"
           title="Shop by category"
           action={{ label: 'All categories', to: '/categories' }}
         />
@@ -85,7 +85,7 @@ export default function HomePage() {
         <SectionHeading
           eyebrow="Selected from the marketplace"
           title="Featured products"
-          description="Browse current listings from sellers on Shopio."
+          description="Browse current listings from sellers on RAGIZE."
           action={{ label: 'Shop all', to: '/shop' }}
         />
         <ProductGrid
@@ -122,13 +122,13 @@ export default function HomePage() {
         />
       )}
 
-      {/* --------------------------- Sell on Shopio --------------------------- */}
+      {/* --------------------------- Sell on RAGIZE --------------------------- */}
       <section className="container-page pt-12 sm:pt-14">
         <div className="grid items-center gap-6 border-y border-ink-200 py-7 sm:py-9 lg:grid-cols-[1.4fr_1fr]">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-500">For sellers</p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-[28px]">
-              Bring your products to Shopio
+              Bring your products to RAGIZE
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-600">
               Create a seller account, publish your catalogue, and manage inventory and orders from one place.

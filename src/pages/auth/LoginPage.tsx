@@ -156,7 +156,7 @@ export default function LoginPage() {
       </Card>
 
       <p className="text-center text-sm text-ink-600">
-        New to Shopio?{' '}
+        New to RAGIZE?{' '}
         <Link to="/register" className="font-medium text-ink link-underline">
           Create an account
         </Link>

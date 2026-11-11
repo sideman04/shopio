@@ -120,7 +120,7 @@ final class AuthService
         $this->notifications->notify(
             $userId,
             'account',
-            'Welcome to Shopio',
+            'Welcome to RAGIZE',
             'Your account has been created. Complete your profile to get started.',
             '/account/profile',
         );
@@ -278,7 +278,7 @@ final class AuthService
             $userId,
             'security',
             'Your password was changed',
-            'Your Shopio password was reset. If this was not you, contact support immediately.',
+            'Your RAGIZE password was reset. If this was not you, contact support immediately.',
             '/account/security',
         );
 

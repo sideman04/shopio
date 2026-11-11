@@ -2,6 +2,7 @@ import {
   Activity,
   BarChart3,
   FolderTree,
+  Gauge,
   Image,
   LayoutDashboard,
   Package,
@@ -26,6 +27,7 @@ const NAV: NavGroup[] = [
     items: [
       { label: 'Overview', to: '/admin', icon: LayoutDashboard, end: true },
       { label: 'Analytics', to: '/admin/analytics', icon: BarChart3 },
+      { label: 'System monitor', to: '/admin/monitoring', icon: Gauge },
       { label: 'Activity log', to: '/admin/activity', icon: Activity },
     ],
   },

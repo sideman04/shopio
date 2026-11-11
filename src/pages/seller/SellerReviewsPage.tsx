@@ -148,7 +148,7 @@ export default function SellerReviewsPage() {
     if (!reportTarget) return
     try {
       await reviewService.reportReview(reportTarget.id, reportReason)
-      toast.success('Review reported', 'The review was sent to Shopio moderation.')
+      toast.success('Review reported', 'The review was sent to RAGIZE moderation.')
       setReportTarget(null)
     } catch (error) {
       toast.error('Report not sent', error instanceof Error ? error.message : 'Please try again.')

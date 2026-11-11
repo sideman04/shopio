@@ -30,7 +30,7 @@ export function SmartImage({ src, alt, className, wrapperClassName, fallbackLabe
   }, [src])
 
   if (!src || failed) {
-    const label = (fallbackLabel ?? alt ?? 'Shopio').slice(0, 28)
+    const label = (fallbackLabel ?? alt ?? 'RAGIZE').slice(0, 28)
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#F6EFE6"/><g fill="#C7A67F"><rect x="215" y="250" width="170" height="120" rx="10" opacity="0.5"/><circle cx="255" cy="288" r="14" opacity="0.6"/><path d="M225 360l52-58 40 44 30-32 48 46z" opacity="0.7"/></g><text x="300" y="424" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="19" fill="#8A8A8A">${label}</text></svg>`
     const placeholder = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
     return (

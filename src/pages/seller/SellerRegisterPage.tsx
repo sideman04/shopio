@@ -267,7 +267,7 @@ export default function SellerRegisterPage() {
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div>
           <header className="max-w-2xl">
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Open your Shopio store</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Open your RAGIZE store</h1>
             <p className="mt-3 text-ink-600">
               {signedIn ? 'Two short steps.' : 'Three short steps.'} You can review everything before you submit,
               and nothing is charged to start selling.
@@ -563,7 +563,7 @@ export default function SellerRegisterPage() {
                 <Card>
                   <CardBody className="space-y-3">
                     <Checkbox
-                      label="I confirm the details above are accurate and I agree to Shopio's Seller Terms and Commission Policy."
+                      label="I confirm the details above are accurate and I agree to RAGIZE's Seller Terms and Commission Policy."
                       error={errors.agree?.message}
                       {...register('agree', {
                         validate: (value) => value || 'Please accept the terms to continue',
