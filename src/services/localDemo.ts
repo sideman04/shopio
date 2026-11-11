@@ -302,7 +302,7 @@ async function handleResourceRequest<T>(
     }
     if (method === 'PATCH' || method === 'PUT' || method === 'POST') {
       let updated = { ...existing, ...storageSafe(input) as Row }
-      if (base === '/admin/users' && parts.at(-1) === 'roles') updated = { ...existing, roles: input.roles ?? existing.roles }
+      if (base === '/admin/users' && parts[parts.length - 1] === 'roles') updated = { ...existing, roles: input.roles ?? existing.roles }
       rows = rows.map((row) => row.id === resourceId ? updated : row)
       saveResourceRows(base, rows)
       return envelope(updated as T, 'Changes saved in this browser')
