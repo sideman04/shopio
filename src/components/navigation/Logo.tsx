@@ -21,12 +21,12 @@ export function Logo({
       )}
       aria-label="RAGIZE — home"
     >
-      <span className="relative block h-16 w-[84px] overflow-hidden" aria-hidden="true">
+      <span className="relative block h-12 w-16 overflow-hidden sm:h-16 sm:w-[84px]" aria-hidden="true">
         <img
           src={logoUrl}
           alt=""
           className={cn(
-            'absolute left-1/2 top-1/2 h-[88px] w-[132px] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain',
+            'absolute left-1/2 top-1/2 h-16 w-24 max-w-none -translate-x-1/2 -translate-y-1/2 object-contain sm:h-[88px] sm:w-[132px]',
             variant === 'light' && 'brightness-110',
           )}
         />
