@@ -5,6 +5,8 @@ import { Eye, EyeOff } from 'lucide-react'
 import { Alert, Button, Card, CardBody, Checkbox, Input } from '@/components/ui'
 import { authService, cartService } from '@/services'
 import { homeRouteForRole, useActiveRole, useAuthStore, useIsAuthenticated } from '@/context'
+import { LOCAL_DEMO } from '@/services/localDemo'
+import type { RoleCode } from '@/types'
 import { toast } from '@/context/uiStore'
 import { isEmail } from '@/lib/utils'
 
@@ -16,6 +18,7 @@ interface LoginForm {
 
 interface LocationState {
   from?: string
+  requiredRole?: RoleCode
 }
 
 /**
@@ -36,7 +39,8 @@ export default function LoginPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const from = (location.state as LocationState | null)?.from
+  const locationState = location.state as LocationState | null
+  const from = locationState?.from
 
   const {
     register,
@@ -54,21 +58,24 @@ export default function LoginPage() {
   // Already signed in? Send the user back where they came from (for example
   // checkout), otherwise to their role's home. Skip this while a fresh sign-in
   // is still finishing so the guest cart can merge before we navigate.
-  if (isAuthenticated && !submitting) {
+  if (isAuthenticated && !submitting && !LOCAL_DEMO) {
     return <Navigate to={from ?? homeRouteForRole(activeRole)} replace />
   }
 
   const displayedError = formError ?? storeError
 
-  const onSubmit = handleSubmit(async (values) => {
+  const signIn = async (email: string, password: string, demoRole?: 'admin' | 'seller') => {
     setFormError(null)
     setSubmitting(true)
     try {
-      const { user } = await authService.login(values.email, values.password)
+      const { user } = await authService.login(email, password)
       // Merge anything added to the guest cart before signing in.
       await cartService.mergeGuestCart()
-      const role = user.roles[0] ?? 'customer'
-      const destination = from ?? homeRouteForRole(role)
+      const role = demoRole ?? user.roles[0] ?? 'customer'
+      const destination =
+        from && (!locationState?.requiredRole || user.roles.includes(locationState.requiredRole))
+          ? from
+          : homeRouteForRole(role)
       toast.success(`Welcome back, ${user.fullName.split(' ')[0]}`)
       navigate(destination, { replace: true })
     } catch (err) {
@@ -76,7 +83,9 @@ export default function LoginPage() {
     } finally {
       setSubmitting(false)
     }
-  })
+  }
+
+  const onSubmit = handleSubmit(({ email, password }) => signIn(email, password))
 
   return (
     <div className="space-y-5">
@@ -88,6 +97,31 @@ export default function LoginPage() {
               Sign in to manage your orders, wishlist and account.
             </p>
           </div>
+
+          {LOCAL_DEMO && (
+            <div className="space-y-3 rounded-xl bg-ink-50 p-4">
+              <p className="text-sm font-semibold text-ink">Demo sign-in</p>
+              <p className="text-xs text-ink-500">Choose a role to enter directly. No password is needed.</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={submitting}
+                  onClick={() => void signIn('admin@shopio.test', 'demo', 'admin')}
+                >
+                  Demo admin
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={submitting}
+                  onClick={() => void signIn('seller@shopio.test', 'demo', 'seller')}
+                >
+                  Demo seller
+                </Button>
+              </div>
+            </div>
+          )}
 
           {displayedError && (
             <Alert
