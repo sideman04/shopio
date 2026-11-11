@@ -145,7 +145,9 @@ async function request<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<ApiEnvelope<T>> {
-  if (LOCAL_DEMO) return localRequest<T>(method.toUpperCase(), path, options.body) as Promise<ApiEnvelope<T>>
+  if (LOCAL_DEMO) {
+    return localRequest<T>(method.toUpperCase(), path, options.body, options.query) as Promise<ApiEnvelope<T>>
+  }
   const headers = new Headers(options.headers)
   const methodUpper = method.toUpperCase()
 

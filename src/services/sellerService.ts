@@ -4,6 +4,7 @@ import { useCatalogStore, type ProductFormValues } from '@/context/catalogStore'
 import { useOrderStore } from '@/context/orderStore'
 import { usePeopleStore } from '@/context/peopleStore'
 import { api, API_BASE_URL } from './apiClient'
+import { LOCAL_DEMO } from './localDemo'
 import { mapOrder, mapPayout, mapProduct, mapSeller, mapSellerDocument, num, paginate } from './mappers'
 
 /**
@@ -79,6 +80,7 @@ export async function registerSeller(input: {
 function withAbsoluteDocumentUrl(document: SellerDocument): SellerDocument {
   // Documents are private: link to the authenticated streaming endpoint rather
   // than exposing the storage path as public media.
+  if (LOCAL_DEMO && document.fileUrl.startsWith('data:')) return document
   return {
     ...document,
     fileUrl: absoluteMediaUrl(`${API_BASE_URL}/sellers/documents/${document.id}/file`),

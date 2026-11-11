@@ -19,6 +19,7 @@ import { useCatalogStore, type ProductFormValues } from '@/context/catalogStore'
 import { usePeopleStore } from '@/context/peopleStore'
 import { useSystemStore } from '@/context/systemStore'
 import { api, API_BASE_URL } from './apiClient'
+import { LOCAL_DEMO } from './localDemo'
 import { absoluteMediaUrl } from './uploadService'
 import {
   mapActivity,
@@ -271,9 +272,9 @@ export async function fetchSellerDocuments(sellerId: number): Promise<SellerDocu
     const document = mapSellerDocument(row)
     return {
       ...document,
-      fileUrl: absoluteMediaUrl(
-        `${API_BASE_URL}/admin/sellers/${sellerId}/documents/${document.id}/file`,
-      ),
+      fileUrl: LOCAL_DEMO && document.fileUrl.startsWith('data:')
+        ? document.fileUrl
+        : absoluteMediaUrl(`${API_BASE_URL}/admin/sellers/${sellerId}/documents/${document.id}/file`),
     }
   })
 }

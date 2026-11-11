@@ -4,8 +4,9 @@ A multi-role e-commerce marketplace — customer storefront, seller dashboard an
 built with **React + Vite + TypeScript + Tailwind CSS** and backed by a **PHP REST API + MariaDB**
 database.
 
-The frontend talks to the live API at `/api/v1`; there is no bundled catalogue or account dataset.
-Product, order, seller, review and dashboard data all come from the backend.
+The frontend can use the live API or browser-only demo mode, selected by `VITE_LOCAL_DEMO`.
+Live mode uses the PHP API and MariaDB; demo mode uses sample data and stores demo changes in the
+current browser.
 
 ---
 
@@ -43,10 +44,21 @@ The trusted seeder creates an administrator for local development:
 Customer and seller accounts are created through the normal registration flows. A signed-in
 customer can open a store from `/seller/register` and is upgraded to the seller role by the API.
 
-When the frontend runs with `VITE_LOCAL_DEMO=true`, use `admin@shopio.test` for the demo admin or
-`seller@shopio.test` for the demo seller. Demo mode accepts any non-empty password and sends each
-account to its matching dashboard; these browser-only accounts are separate from the backend
+When the frontend runs with `VITE_LOCAL_DEMO=true`, use the **Demo admin** and **Demo seller**
+buttons on the sign-in page. Demo mode does not verify passwords. The seller account starts with a
+pending application; sign in as the admin, approve it under **Admin → Sellers**, then sign in as
+the seller to access the seller area. These browser-only accounts are separate from the backend
 administrator above.
+
+Products from an unapproved or inactive demo store are hidden from the public storefront.
+
+### Browser-only demo data
+
+Demo mode does not call the PHP API. Mutable demo data—including seller applications and approval
+status, catalog edits, orders, account details and uploaded files—is saved in this browser's
+`localStorage`, so changes survive reloads but are not shared across browsers or devices. The
+built-in sample catalog is seeded by the frontend. Clearing this site's browser storage resets the
+demo data; browser storage limits apply, especially to uploaded files.
 
 ### Scripts
 
@@ -74,8 +86,8 @@ and per-item fulfilment, analytics, store profile and location, payouts, reviews
 **Admin** — overview, users, sellers and verification, products and moderation, categories, orders,
 transactions, promotions, reviews, analytics, banners, settings and the activity log.
 
-Cart, wishlist, recently viewed and recent searches persist to `localStorage`. Account, catalogue
-and order data are loaded from and written to the API.
+In live mode, account, catalogue and order data are loaded from and written to the API. In demo
+mode, the adapter stores mutable application data in browser `localStorage`.
 
 ---
 
