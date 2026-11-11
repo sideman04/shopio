@@ -43,6 +43,11 @@ The trusted seeder creates an administrator for local development:
 Customer and seller accounts are created through the normal registration flows. A signed-in
 customer can open a store from `/seller/register` and is upgraded to the seller role by the API.
 
+When the frontend runs with `VITE_LOCAL_DEMO=true`, use `admin@shopio.test` for the demo admin or
+`seller@shopio.test` for the demo seller. Demo mode accepts any non-empty password and sends each
+account to its matching dashboard; these browser-only accounts are separate from the backend
+administrator above.
+
 ### Scripts
 
 | Script | Purpose |

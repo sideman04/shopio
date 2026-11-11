@@ -92,8 +92,37 @@ function cartPayload() {
 export async function localRequest<T>(method: string, path: string, body?: unknown): Promise<LocalResponse<T>> {
   const input = (body ?? {}) as Row
   if (path === '/auth/login' || path === '/auth/register') {
-    const isSeller = Boolean(input.store_name)
-    const user = { id: 1, full_name: input.full_name || 'Demo Customer', email: input.email || 'demo@shopio.test', phone: input.phone || '+255 700 000 000', roles: isSeller ? ['customer', 'seller', 'admin'] : ['customer', 'seller', 'admin'], status: 'active', email_verified_at: now, created_at: now, seller_id: 1 }
+    const email = String(input.email || 'demo@shopio.test').trim().toLowerCase()
+    const demoAccounts: Record<string, Row> = {
+      'admin@shopio.test': {
+        id: 2,
+        full_name: 'Demo Administrator',
+        roles: ['admin'],
+      },
+      'seller@shopio.test': {
+        id: 1,
+        full_name: 'Demo Seller',
+        roles: ['seller', 'customer'],
+        seller_id: 1,
+      },
+    }
+    const isSellerRegistration = path === '/auth/register' && Boolean(input.store_name)
+    const account = path === '/auth/login'
+      ? demoAccounts[email] ?? { id: 3, full_name: 'Demo Customer', roles: ['customer'] }
+      : {
+        id: 1,
+        full_name: input.full_name || 'Demo Customer',
+        roles: isSellerRegistration ? ['seller', 'customer'] : ['customer'],
+        ...(isSellerRegistration ? { seller_id: 1 } : {}),
+      }
+    const user = {
+      ...account,
+      email,
+      phone: input.phone || '+255 700 000 000',
+      status: 'active',
+      email_verified_at: now,
+      created_at: now,
+    }
     write(keys.user, user)
     return envelope({ user, token: 'local-demo-token', expiresAt: new Date(Date.now() + 86400000).toISOString() } as T, 'Welcome to RAGIZE demo mode')
   }
