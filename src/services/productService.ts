@@ -23,6 +23,8 @@ export interface ProductQuery {
   inStockOnly?: boolean
   brands?: string[]
   sellerIds?: number[]
+  /** Public store slug, used to load a seller's storefront catalogue. */
+  sellerSlug?: string
   tags?: string[]
   sort?: SortKey
   page?: number
@@ -61,6 +63,8 @@ function applyClientFilters(products: Product[], query: ProductQuery): Product[]
         product.name,
         product.brand,
         product.categoryName,
+        product.sellerName,
+        product.sellerSlug,
         product.shortDescription,
         product.description,
         ...(product.tags ?? []),
@@ -79,6 +83,7 @@ function applyClientFilters(products: Product[], query: ProductQuery): Product[]
       if (!product.brand || !brands.has(product.brand)) return false
     }
     if (query.sellerIds?.length && !query.sellerIds.includes(product.sellerId)) return false
+    if (query.sellerSlug && product.sellerSlug !== query.sellerSlug) return false
     if (query.tags?.length && !query.tags.some((tag) => (product.tags ?? []).includes(tag))) return false
     if (query.colors?.length) {
       const colors = productColors(product)
@@ -132,6 +137,7 @@ export async function queryProducts(query: ProductQuery = {}): Promise<Paginated
         q: query.q,
         category: query.categories?.[0],
         brand: query.brands?.[0],
+        seller: query.sellerSlug,
         sort,
         min_price: query.minPrice,
         max_price: query.maxPrice,
@@ -210,7 +216,7 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
 }
 
 export interface SearchSuggestion {
-  type: 'product' | 'category' | 'term'
+  type: 'product' | 'category' | 'store' | 'term'
   label: string
   sublabel?: string
   href: string
@@ -240,6 +246,21 @@ export async function getSearchSuggestions(term: string): Promise<SearchSuggesti
         href: `/categories/${category.slug}`,
       }),
     )
+
+  const stores = new Map<string, Product>()
+  productResult.items.forEach((product) => {
+    if (product.sellerSlug && product.sellerName && !stores.has(product.sellerSlug)) {
+      stores.set(product.sellerSlug, product)
+    }
+  })
+  Array.from(stores.values()).slice(0, 3).forEach((product) =>
+    suggestions.push({
+      type: 'store',
+      label: product.sellerName!,
+      sublabel: 'Store',
+      href: `/store/${encodeURIComponent(product.sellerSlug!)}`,
+    }),
+  )
 
   productResult.items.slice(0, 5).forEach((product) =>
     suggestions.push({

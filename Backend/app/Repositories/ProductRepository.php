@@ -81,8 +81,16 @@ final class ProductRepository extends Repository
 
         if (!empty($filters['q'])) {
             $like = '%' . $this->escapeLike((string) $filters['q']) . '%';
-            $where[] = '(p.name LIKE :q ESCAPE \'\\\\\' OR p.brand LIKE :q ESCAPE \'\\\\\' OR p.short_description LIKE :q ESCAPE \'\\\\\')';
-            $params['q'] = $like;
+            $where[] = '(p.name LIKE :q_name ESCAPE \'\\\\\'
+                         OR p.brand LIKE :q_brand ESCAPE \'\\\\\'
+                         OR p.short_description LIKE :q_description ESCAPE \'\\\\\'
+                         OR s.store_name LIKE :q_store_name ESCAPE \'\\\\\'
+                         OR s.store_slug LIKE :q_store_slug ESCAPE \'\\\\\')';
+            $params['q_name'] = $like;
+            $params['q_brand'] = $like;
+            $params['q_description'] = $like;
+            $params['q_store_name'] = $like;
+            $params['q_store_slug'] = $like;
         }
 
         if (!empty($filters['seller_id'])) {

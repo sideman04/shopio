@@ -108,7 +108,7 @@ export function SearchBar({ className, inputClassName, autoFocus, onSubmitted, s
         }}
       >
         <label htmlFor={`search-${listId}`} className="sr-only">
-          Search products
+          Search products and stores
         </label>
         <div className="relative">
           <Search
@@ -123,7 +123,7 @@ export function SearchBar({ className, inputClassName, autoFocus, onSubmitted, s
             type="search"
             value={term}
             autoFocus={autoFocus}
-            placeholder="Search for sofas, phones, shoes…"
+            placeholder="Search products, brands, or stores…"
             autoComplete="off"
             role="combobox"
             aria-expanded={open && items.length > 0}

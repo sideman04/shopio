@@ -86,7 +86,7 @@ export default function ProductDetailPage() {
     if (product.sellerSlug) {
       void catalogService.fetchStore(product.sellerSlug).then((fetched) => {
         if (fetched) upsertSeller(fetched)
-      })
+      }).catch(() => undefined)
     }
   }, [product, viewProduct, upsertSeller])
 
@@ -343,7 +343,7 @@ export default function ProductDetailPage() {
                   )}
                 </div>
               </div>
-              <Button variant="outline" size="sm" to={`/search?q=${encodeURIComponent(seller.storeName)}`}>
+              <Button variant="outline" size="sm" to={`/store/${encodeURIComponent(seller.storeSlug)}`}>
                 <Store className="h-4 w-4" />
                 Visit store
               </Button>

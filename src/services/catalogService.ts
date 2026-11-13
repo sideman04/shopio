@@ -16,17 +16,13 @@ export async function fetchBanners(placement?: Banner['placement']): Promise<Ban
   return banners
 }
 
-export async function fetchStore(slug: string): Promise<Seller | undefined> {
-  try {
-    const response = await api.get<Record<string, unknown>>(`/stores/${encodeURIComponent(slug)}`, {
-      anonymous: true,
-    })
-    const seller = mapSeller(response.data)
-    usePeopleStore.getState().upsertSeller(seller)
-    return seller
-  } catch {
-    return undefined
-  }
+export async function fetchStore(slug: string): Promise<Seller> {
+  const response = await api.get<Record<string, unknown>>(`/stores/${encodeURIComponent(slug)}`, {
+    anonymous: true,
+  })
+  const seller = mapSeller(response.data)
+  usePeopleStore.getState().upsertSeller(seller)
+  return seller
 }
 
 /** Warm the catalogue cache (used for facets and suggestions). */

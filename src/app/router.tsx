@@ -15,6 +15,7 @@ import CategoriesPage from '@/pages/storefront/CategoriesPage'
 import CategoryDetailPage from '@/pages/storefront/CategoryDetailPage'
 import ProductDetailPage from '@/pages/storefront/ProductDetailPage'
 import SearchPage from '@/pages/storefront/SearchPage'
+import StorePage from '@/pages/storefront/StorePage'
 import WishlistPage from '@/pages/storefront/WishlistPage'
 import CartPage from '@/pages/storefront/CartPage'
 import CheckoutPage from '@/pages/storefront/CheckoutPage'
@@ -100,6 +101,7 @@ export function AppRoutes() {
         <Route path="/categories/:slug" element={<CategoryDetailPage />} />
         <Route path="/product/:slug" element={<ProductDetailPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/store/:slug" element={<StorePage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route

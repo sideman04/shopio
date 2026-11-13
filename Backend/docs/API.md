@@ -126,7 +126,7 @@ not `403`, so existence is not disclosed).
 | Method | Path | Notes |
 | --- | --- | --- |
 | `GET` | `/health` | Liveness probe. |
-| `GET` | `/products`, `/products/{slug}`, `/products/{slug}/reviews` | Only active products from approved, active sellers. |
+| `GET` | `/products`, `/products/{slug}`, `/products/{slug}/reviews` | Only active products from approved, active sellers. Product search (`q`) includes seller names and slugs; `seller` filters a store's catalogue by slug. |
 | `GET` | `/categories`, `/categories/{slug}` | |
 | `GET` | `/banners`, `/stores/{slug}` | |
 | `GET` | `/countries`, `/regions`, `/cities`, `/cities/{id}` | |

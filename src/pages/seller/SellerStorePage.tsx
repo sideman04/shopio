@@ -165,7 +165,8 @@ export default function SellerStorePage() {
           <>
             <Button
               variant="outline"
-              to={`/search?q=${encodeURIComponent(seller?.storeName ?? '')}`}
+              to={seller?.storeSlug ? `/store/${encodeURIComponent(seller.storeSlug)}` : undefined}
+              disabled={!seller?.storeSlug}
             >
               <ExternalLink className="h-4 w-4" aria-hidden="true" />
               View public store

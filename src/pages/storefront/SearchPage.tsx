@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Search, Sparkles } from 'lucide-react'
+import { Search, Sparkles, Store } from 'lucide-react'
 import type { Product, SortKey } from '@/types'
 import { ProductGrid } from '@/components/products/ProductGrid'
 import { SortDropdown } from '@/components/products/SortDropdown'
@@ -29,6 +29,16 @@ export default function SearchPage() {
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
+  const matchingStores = Array.from(
+    new Map(
+      items
+        .filter((product) => product.sellerSlug && product.sellerName)
+        .map((product) => [
+          product.sellerSlug!,
+          { slug: product.sellerSlug!, name: product.sellerName! },
+        ]),
+    ).values(),
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -129,6 +139,30 @@ export default function SearchPage() {
 
         {q ? (
           <>
+            {!loading && matchingStores.length > 0 && (
+              <section className="mb-8" aria-labelledby="matching-stores-heading">
+                <h2 id="matching-stores-heading" className="mb-3 text-lg font-semibold text-ink">
+                  Stores matching “{q}”
+                </h2>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {matchingStores.map((store) => (
+                    <Link
+                      key={store.slug}
+                      to={`/store/${encodeURIComponent(store.slug)}`}
+                      className="flex items-center gap-3 rounded-card border border-ink-200 bg-white p-4 transition hover:border-ink-400 hover:shadow-card"
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-600">
+                        <Store className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold text-ink">{store.name}</span>
+                        <span className="text-sm text-ink-500">Visit store</span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
             <ProductGrid
               products={items}
               loading={loading}
